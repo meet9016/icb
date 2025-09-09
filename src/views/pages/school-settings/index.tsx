@@ -32,19 +32,19 @@ const [activeTab, setActiveTab] = useState(() => {
           <CustomTabList onChange={handleChange} variant='scrollable' pill='true'>
             <Tab label='Edit School' icon={<i className='ri-group-line' />} iconPosition='start' value='account' />
             <Tab label='Security' icon={<i className='ri-lock-2-line' />} iconPosition='start' value='security' />
-            <Tab
+            {/* <Tab
               label='Email'
               icon={<i className="ri-mail-line" />}
               iconPosition='start'
               value='email'
-            />
-            <Tab
+            /> */}
+            {/* <Tab
               label='Notifications'
               icon={<i className='ri-notification-4-line' />}
               iconPosition='start'
               value='notifications'
             />
-            <Tab label='Sms' icon={<i className='ri-message-line' />} iconPosition='start' value='sms' />
+            <Tab label='Sms' icon={<i className='ri-message-line' />} iconPosition='start' value='sms' /> */}
             <Tab label='Connections' icon={<i className='ri-link-m' />} iconPosition='start' value='connections' />
           </CustomTabList>
         </Grid>

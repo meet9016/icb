@@ -6,7 +6,7 @@ import { useEffect, useState } from 'react'
 
 // Next Imports
 import Link from 'next/link'
-import { useParams, useRouter, useSearchParams } from 'next/navigation'
+import { useParams, useRouter } from 'next/navigation'
 
 // MUI Imports
 import Typography from '@mui/material/Typography'
@@ -26,7 +26,6 @@ import classnames from 'classnames'
 // Type Imports
 import type { Mode } from '@core/types'
 import type { Locale } from '@/configs/i18n'
-import axios from 'axios'
 
 // Hook Imports
 import { useImageVariant } from '@core/hooks/useImageVariant'
@@ -37,25 +36,18 @@ import { getLocalizedUrl } from '@/utils/i18n'
 import { saveToken } from '@/utils/tokenManager'
 import { useDispatch, useSelector } from 'react-redux'
 import { RootState } from '@/redux-store'
-import { Box, Checkbox, FormControlLabel, Skeleton } from '@mui/material'
+import { Box, Checkbox, CircularProgress, FormControlLabel, Skeleton } from '@mui/material'
 import { toast } from 'react-toastify'
 import { setLoginInfo } from '@/redux-store/slices/login'
 import { setUserPermissionInfo } from '@/redux-store/slices/userPermission'
 import endPointApi from '@/utils/endPointApi'
 import showMsg from '@/utils/showMsg'
 import { api } from '@/utils/axiosInstance'
-import { setAdminInfo } from '@/redux-store/slices/admin'
 import ToastsCustom from '@/comman/toastsCustom/LoginToasts'
 import { setConnectDataLack } from '@/redux-store/slices/dataLack'
 
 type ErrorType = {
   message: string[]
-}
-type School = {
-  name: string
-  logo: string
-  background_image: string
-  [key: string]: any
 }
 
 type FormData = InferInput<typeof schema>
@@ -76,6 +68,7 @@ const Login = ({ mode }: { mode: Mode }) => {
   const adminStore = useSelector((state: RootState) => state.admin)
 
   const [loading, setLoading] = useState(false)
+  const [loader, setLoader] = useState(false)
   const [disableBtn, setDisableBtn] = useState(false)
   const [bgUrl, setBgUrl] = useState<string>('')
 
@@ -84,27 +77,20 @@ const Login = ({ mode }: { mode: Mode }) => {
   // Vars
   const darkImg = '/images/pages/auth-v2-mask-1-dark.png'
   const lightImg = '/images/pages/auth-v2-mask-1-light.png'
-  const logo = '/images/apps/ecommerce/product-25.png'
 
   // Hooks
   const router = useRouter()
-  const searchParams = useSearchParams()
   const { lang: locale } = useParams()
   const { settings } = useSettings()
-  const [shouldRender, setShouldRender] = useState(false)
 
   useEffect(() => {
     const token = localStorage.getItem('auth_token')
 
     if (token) {
-      const homeUrl = getLocalizedUrl('dashboards/academy/', locale as Locale)
+      const homeUrl = getLocalizedUrl('dashboards/', locale as Locale)
       router.replace(homeUrl)
-    } else {
-      setShouldRender(true)
     }
   }, [])
-
-  // if (!shouldRender) return null
 
   const {
     control,
@@ -124,6 +110,7 @@ const Login = ({ mode }: { mode: Mode }) => {
 
   const onSubmit: SubmitHandler<FormData> = async (data: FormData) => {
     setDisableBtn(true)
+    setLoader(true)
     const formData = new FormData()
     formData.append('username', data.username)
     formData.append('password', data.password)
@@ -139,12 +126,12 @@ const Login = ({ mode }: { mode: Mode }) => {
         // if (response.data.status === 200 && response.data.message === 'Login Success') {
 
         saveToken(response.data.access_token)
-        ToastsCustom(response.data.data.username, `${showMsg.login}`, '/images/avatars/1.png')
         // toast.success(`${showMsg.login}`);
         dispatch(setLoginInfo(response.data.data))
 
-        const redirectURL = searchParams.get('redirectTo') ?? '/dashboards'
-        router.replace(getLocalizedUrl(redirectURL, locale as Locale))
+        // const redirectURL = searchParams.get('redirectTo') ?? '/dashboards'
+        // router.replace(getLocalizedUrl(redirectURL, locale as Locale))
+        router.replace(getLocalizedUrl('/dashboards', locale as Locale))
 
         // Fetch permission after login
         if (response.data.data.username !== response.data.data.tenant_id) {
@@ -156,22 +143,27 @@ const Login = ({ mode }: { mode: Mode }) => {
         //DataLack Connection
         const res = await api.get(`${endPointApi.getConnectionView}`)
         dispatch(setConnectDataLack(res.data.data[0].status_view))
+        setLoader(false)
         // } else {
         //   const message = response?.data?.message || 'Login failed';
         //   toast.error(message);
         // }
+        ToastsCustom(response.data.data.username, `${showMsg.login}`, '/images/avatars/1.png')
       })
       .catch(error => {
         const message = error?.response?.data?.message || 'Username or Password is incorrect'
+        setLoader(false)
 
         if (error?.response?.status === 404) {
           toast.error(message)
           setDisableBtn(false)
           setLoading(false)
+          setLoader(false)
         } else {
           toast.error(message)
           setDisableBtn(false)
           setLoading(false)
+          setLoader(false)
         }
       })
       .finally(() => {
@@ -185,45 +177,6 @@ const Login = ({ mode }: { mode: Mode }) => {
       setBgUrl(adminStore?.background_image)
     }
   }, [adminStore])
-
-  const firstApiCall = async () => {
-    // try {
-    // setLoading(true);
-    const hostNameParts = window.location.hostname.split('.')
-    const hostNameData = hostNameParts.length > 2 ? hostNameParts[0] : 'icbmyschool'
-
-    const baseURL = process.env.NEXT_PUBLIC_APP_URL
-
-    if (!baseURL) {
-      throw new Error('')
-    }
-
-    const formData = new URLSearchParams()
-    formData.append('type', hostNameData)
-
-    try {
-      const res = await fetch(baseURL, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/x-www-form-urlencoded'
-        },
-        body: formData.toString()
-      })
-
-      const data = await res.json()
-
-      if (data.status === 200) {
-        dispatch(setAdminInfo(data.data))
-        //   setLoading(false);
-      }
-    } catch (error) {
-      console.error('Error calling API', error)
-    }
-  }
-
-  useEffect(() => {
-    firstApiCall()
-  }, [])
 
   return (
     <div className='flex bs-full justify-center'>
@@ -379,8 +332,9 @@ const Login = ({ mode }: { mode: Mode }) => {
                 <div className='flex justify-start items-center flex-wrap gap-x-3 gap-y-1'>
                   <FormControlLabel control={<Checkbox defaultChecked />} label='Remember me ' />
                 </div>
-                <Button disabled={disableBtn} fullWidth variant='contained' type='submit'>
-                  Log In
+                <Button disabled={disableBtn || loader} fullWidth variant='contained' type='submit'>
+                  {/* Log In */}
+                  {loader ? <CircularProgress size={24} color='inherit' /> : 'Log In'}
                 </Button>
 
                 <div className='flex justify-between items-center flex-wrap gap-2'>

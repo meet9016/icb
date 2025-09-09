@@ -152,6 +152,10 @@ const CampaignListPage = ({ tableData }: { tableData?: UsersType[] }) => {
   const [paginationNotification, setPaginationNotification] = useState({ page: 0, perPage: 10 })
   const [totalRowsNotification, setTotalRowsNotification] = useState(0)
 
+  // Whatsapp
+  const [paginationWhatsapp, setPaginationWhatsapp] = useState({ page: 0, perPage: 10 })
+  const [totalRowWhatsapp, setTotalRowsWhatsapp] = useState(0)
+
   // Sms
   const [paginationSms, setPaginationSms] = useState({ page: 0, perPage: 10 })
   const [totalRowsSms, setTotalRowsSms] = useState(0)
@@ -162,8 +166,12 @@ const CampaignListPage = ({ tableData }: { tableData?: UsersType[] }) => {
   const [channelName, setChannelName] = useState('')
   const [viewLogId, setViewLogId] = useState('')
   const [channelCounts, setChannelCounts] = useState<DataType[]>([])
+
   const [viewEmailLog, setViewEmailLog] = useState<EmailLogType[]>([])
   const [viewNotificationLog, setViewNotificationLog] = useState<EmailLogType[]>([])
+  const [viewWhatsappLog, setViewWhatsappLog] = useState<EmailLogType[]>([])
+  const [viewSmsLog, setViewSmsLog] = useState<EmailLogType[]>([])
+
   const [loaderEmailView, setLoaderEmailView] = useState(false)
   const [loaderNotifiView, setLoaderNotifiView] = useState(false)
   const [loaderSmsView, setLoaderSmsView] = useState(false)
@@ -248,9 +256,7 @@ const CampaignListPage = ({ tableData }: { tableData?: UsersType[] }) => {
       }),
       columnHelper.accessor('frequency_type_name', {
         header: 'frequency Type',
-        cell: ({ row }) => (
-          <Typography>{row.original.frequency_type_name}</Typography>
-        )
+        cell: ({ row }) => <Typography>{row.original.frequency_type_name}</Typography>
       }),
       columnHelper.accessor('campaign_date', {
         header: 'campaign date',
@@ -258,9 +264,7 @@ const CampaignListPage = ({ tableData }: { tableData?: UsersType[] }) => {
       }),
       columnHelper.accessor('formatted_campaign_time', {
         header: 'campaign time',
-        cell: ({ row }) => (
-          <Typography>{row.original.formatted_campaign_time}</Typography>
-        )
+        cell: ({ row }) => <Typography>{row.original.formatted_campaign_time}</Typography>
       }),
       columnHelper.accessor('frequency_count', {
         header: 'Repeat',
@@ -470,6 +474,40 @@ const CampaignListPage = ({ tableData }: { tableData?: UsersType[] }) => {
       getNotificationViewLog()
     }
   }, [viewLogId, openDialog, paginationNotification.page, paginationNotification.perPage, globalFilter])
+
+  const getWhatsappViewLog = async () => {
+    if (channelName === 'wp') {
+      setLoaderWpView(true)
+      const formdata = new FormData()
+
+      formdata.append('announcement_id', ids || '')
+      formdata.append('campaign_id', viewLogId)
+      formdata.append('search', '')
+      formdata.append('per_page', paginationWhatsapp.perPage.toString())
+      formdata.append('page', (paginationWhatsapp.page + 1).toString())
+      try {
+        const res = await api.post(`${endPointApi.postcampaignWhatsappLogGet}`, formdata)
+        
+        setViewWhatsappLog(res.data)
+        setTotalRowsWhatsapp(res.data.total)
+        setLoaderWpView(false)
+      } catch (err: any) {
+        if (err.response?.status === 500) {
+          toast.error('Internal Server Error.')
+          setLoaderWpView(false)
+        } else {
+          toast.error(err?.response?.data?.message || 'Something went wrong')
+          setLoaderWpView(false)
+        }
+      }
+    }
+  }
+
+  useEffect(() => {
+    if (openDialog) {
+      getWhatsappViewLog()
+    }
+  }, [viewLogId, openDialog, paginationWhatsapp.page, paginationWhatsapp.perPage, globalFilter])
   const getSmsViewLog = async () => {
     if (channelName === 'sms') {
       setLoaderSmsView(true)
@@ -483,7 +521,7 @@ const CampaignListPage = ({ tableData }: { tableData?: UsersType[] }) => {
       try {
         const res = await api.post(`${endPointApi.postcampaignSmsLogGet}`, formdata)
 
-        setViewNotificationLog(res.data)
+        setViewSmsLog(res.data)
         setTotalRowsSms(res.data.total)
         setLoaderSmsView(false)
       } catch (err: any) {
@@ -682,22 +720,36 @@ const CampaignListPage = ({ tableData }: { tableData?: UsersType[] }) => {
           open={openDialog}
           setOpen={setOpenDialog}
           selectedChannel={channelName}
-          viewLogData={viewEmailLog}
-          setViewEmailLog={setViewEmailLog}
-          setViewNotificationLog={setViewNotificationLog}
-          viewNotificationLog={viewNotificationLog}
+
           setPaginationEmail={setPaginationEmail}
           setPaginationNotification={setPaginationNotification}
+          setPaginationWhatsapp={setPaginationWhatsapp}
           setPaginationSms={setPaginationSms}
-          totalRowsNotification={totalRowsNotification}
-          totalRowsEmail={totalRowsEmail}
-          totalRowsSms={totalRowsSms}
           paginationEmail={paginationEmail}
           paginationNotification={paginationNotification}
+          paginationWhatsapp={paginationWhatsapp}
           paginationSms={paginationSms}
+
           loaderEmailView={loaderEmailView}
           loaderNotifiView={loaderNotifiView}
+          loaderWpView={loaderWpView}
           loaderSmsView={loaderSmsView}
+
+          viewLogData={viewEmailLog}
+          viewNotificationLog={viewNotificationLog}
+          viewWhatsappLog={viewWhatsappLog}
+          viewSmsLog={viewSmsLog}
+
+          totalRowsNotification={totalRowsNotification}
+          totalRowsEmail={totalRowsEmail}
+          totalRowWhatsapp={totalRowWhatsapp}
+          totalRowsSms={totalRowsSms}
+
+          setViewEmailLog={setViewEmailLog}
+          setViewNotificationLog={setViewNotificationLog}
+          setViewWhatsappLog={setViewWhatsappLog}
+          setViewSmsLog={setViewSmsLog}
+
         />
       )}
     </>

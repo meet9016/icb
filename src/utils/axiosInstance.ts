@@ -4,9 +4,9 @@ const baseURL = process.env.NEXT_PUBLIC_APP_URL;
 
 const apiAdminInstance = axios.create({
   baseURL,
-  headers: {
-    'Content-Type': 'application/json'
-  }
+  // headers: {
+  //   'Content-Type': 'multipart/form-data'
+  // }
 })
 
 // Optional: Add token automatically if available

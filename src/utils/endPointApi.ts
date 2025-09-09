@@ -51,10 +51,12 @@ export interface EndPointApi {
     postCampaignEmailLogGet: string
     postCampaignPushNotificationslogGet: string
     postcampaignSmsLogGet: string
+    postcampaignWhatsappLogGet: string
 
     //Datalack
     getAllRolesDataLack :string
     postfilterDataLack :string
+    postfilterDataLackEdit :string
 }
 
 // Define and export the API endpoint object
@@ -110,10 +112,12 @@ const endPointApi: EndPointApi = {
     postCampaignEmailLogGet: 'campaign-email-log', //log
     postCampaignPushNotificationslogGet: 'campaign-push-notifications-log',
     postcampaignSmsLogGet: 'campaign-sms-log',
+    postcampaignWhatsappLogGet: 'campaign-wp-log',
 
     //Datalack
     getAllRolesDataLack : 'db/roles',
-    postfilterDataLack : 'db/filters'
+    postfilterDataLack : 'db/filters',
+    postfilterDataLackEdit: 'db/filters-edit'
 };
 
 export default endPointApi;

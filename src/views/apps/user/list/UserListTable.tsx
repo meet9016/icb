@@ -1277,7 +1277,7 @@ const StatusOptionMenu: React.FC<StatusOptionMenuProps> = ({
               {/* <img src='/images/logos/Microsoft-Icon.png' alt='Microsoft' className='w-[17px] h-[17px]' /> */}
               <i className={classnames('ri-database-line', 'text-[16px]')} />
             </CustomAvatar>
-            Connect
+            Sync with Datalake
           </MenuItem>
         )}
       </Menu>

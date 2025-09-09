@@ -21,7 +21,7 @@ import {
 } from 'ag-grid-enterprise'
 import { ModuleRegistry } from 'ag-grid-community'
 import { RowApiModule } from 'ag-grid-community'
-import { IconButton, Tooltip } from '@mui/material'
+import { IconButton, Switch, Tooltip } from '@mui/material'
 import { useSettings } from '@/@core/hooks/useSettings'
 // Register required AG Grid modules
 ModuleRegistry.registerModules([
@@ -43,6 +43,9 @@ export interface Props {
   selectedData: any
   connectDataLack: any
   selectedLabelsDataLack: any
+  setSelectRowId: any
+  selectRowId: any
+  paginationDatalack: any
 }
 
 const theme = themeQuartz
@@ -63,21 +66,25 @@ const theme = themeQuartz
     'dark-red'
   )
 
-const AudienceGrid = ({ setSelectedIds, selectedData, connectDataLack, selectedLabelsDataLack }: Props) => {
+const AudienceGrid = ({
+  setSelectedIds,
+  selectedData,
+  connectDataLack,
+  selectedLabelsDataLack,
+  setSelectRowId,
+  selectRowId,
+  paginationDatalack
+}: Props) => {
   const [column, setColumn] = useState<ColDef[]>([])
+  const [selectedRole, setSelectedRole] = useState('student') // default one checked
+
+  const handleChange = role => {
+    setSelectedRole(role) // always replace, so only one is true
+  }
 
   const gridRef = useRef(null)
   // const gridRef = useRef<AgGridReact<any>>(null)
   const { settings } = useSettings()
-
-  // const containerStyle = useMemo(() => ({ width: '100%', height: '50vh' }), [])
-  // const gridStyle = useMemo(() => ({ height: '100%', width: '100%' }), [])
-  // const [columnDefs] = useState([
-  //   { field: 'role_name', rowGroup: true, hide: true },
-  //   { field: 'full_name', headerName: 'Full Name' },
-  //   { field: 'email' },
-  //   { field: 'username', headerName: 'User Name' }
-  // ])
 
   useEffect(() => {
     if (!selectedData) return
@@ -111,35 +118,6 @@ const AudienceGrid = ({ setSelectedIds, selectedData, connectDataLack, selectedL
     setColumn(dynamicCols)
   }, [selectedData])
 
-  // const defaultColDef = useMemo(
-  //   () => ({
-  //     flex: 1,
-  //     minWidth: 120,
-  //     resizable: true,
-  //     sortable: true,
-  //     filter: true
-  //   }),
-  //   []
-  // )
-
-  const autoGroupColumnDef = useMemo(
-    () => ({
-      headerName: 'Role',
-      field: 'role_name',
-      minWidth: 250,
-      checkboxSelection: true,
-      headerCheckboxSelection: true,
-      cellRendererParams: {
-        suppressCount: true
-      }
-    }),
-    []
-  )
-
-  const pagination = true
-  const paginationPageSize = 10
-  const paginationPageSizeSelector = [10, 20, 50, 100]
-
   const handleSelectionChanged = () => {
     if (gridRef.current) {
       const selectedNodes = gridRef.current.api.getSelectedNodes()
@@ -165,91 +143,112 @@ const AudienceGrid = ({ setSelectedIds, selectedData, connectDataLack, selectedL
       }
     })
   }, [])
-  // const buckets = { parent: parentArray, student: studentArray /*, teacher: teacherArray */ }
 
-  const EXCLUDED = new Set(['check', 'user_id', 'table_id', 'source_table'])
+  // keep APIs per role
+  const apiByRoleRef = useRef<Record<string, any>>({})
 
+  // keep selected IDs per role
+  const selectedIdsByRoleRef = useRef<Record<string, string[]>>({})
+
+  // helper to Title Case
   const toTitle = (s: string) => s.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase())
+
+  // exclude some fields
+  const EXCLUDED = new Set(['guardian_id', 'student_id', 'check', 'user_id', 'table_id', 'source_table', 'contact_type'])
+
+  // mapping for specific field headers
+  const HEADER_MAP: Record<string, string> = {
+    par_name: 'Parent Name',
+    m_phone1: 'Mobile Phone 1',
+    m_phone2: 'Mobile Phone 2',
+    home_phone: 'Home Phone',
+    contact_type: 'Contact Type',
+    contact_type_value: 'Contact Type Value',
+    par_code: 'Parent Code',
+    dob: 'Date of Birth',
+    addr1: 'Address 1',
+    add2: 'Address 2',
+    tch_code: 'Teacher Code',
+    emp_code: 'Employee Code',
+    emp_status: 'Employee Status'
+  }
 
   const buildCols = (rows: any[]) => {
     if (!rows?.length) return []
-    const keys = Object.keys(rows[0]).filter(k => !EXCLUDED.has(k)) // 👈 filter here
-
+    const keys = Object.keys(rows[0]).filter(k => !EXCLUDED.has(k))
     return keys.map(field => ({
       field,
-      headerName: toTitle(field),
+      headerName: HEADER_MAP[field] || toTitle(field), // 👈 use map first, fallback to toTitle
       flex: 1,
       minWidth: 140,
       sortable: true,
       filter: true,
       resizable: true,
       valueGetter: (p: any) => {
-        const v = p.data?.[field]
-        if (Array.isArray(v)) return v.length ? v.join(', ') : '-'
+        if (!p.data || !(field in p.data)) {
+          return '-'
+        }
+
+        const v = p.data[field]
+
+        if (Array.isArray(v)) {
+          return v.length ? v.join(', ') : '-'
+        }
+
         return v === '' || v === null || v === undefined ? '-' : v
       }
     }))
   }
 
-  const onSelectionChanged = () => {
-    if (gridRef.current) {
-      const selectedNodes = gridRef.current.api.getSelectedNodes()
-      setSelectedIds(selectedNodes.map((node: any) => (node.data.id ? node.data.id : node.data.user_id)))
-    }
+  // ✅ per-grid first render auto-select for rows with check === true
+  const onFirstDataRenderedFactory = (role: string) => (params: any) => {
+    params.api.forEachNode((node: any) => {
+      if (!node.group && node.data?.check === true) {
+        node.setSelected(true)
+      }
+    })
+    // after seeding selection, update merged state once
+    const nodes = params.api.getSelectedNodes()
+    selectedIdsByRoleRef.current[role] = nodes.map((n: any) => n.data.id ?? n.data.user_id)
+    const merged = Object.values(selectedIdsByRoleRef.current).flat()
+    setSelectedIds(merged)
+    setSelectRowId(merged)
   }
+
+  // ✅ per-grid selection change that merges with others
+  const onSelectionChangedFactory = (role: string) => (params: any) => {
+    const nodes = params.api.getSelectedNodes()
+    const ids = nodes.map((n: any) => n.data.id ?? n.data.user_id)
+    selectedIdsByRoleRef.current[role] = ids
+
+    const merged = Object.values(selectedIdsByRoleRef.current).flat()
+    setSelectedIds(merged)
+    setSelectRowId(merged)
+  }
+
+  // 1) Stamp each row with a stable, per-grid unique key based on index
+  const withStableKeys = (role: string, rows: any[]) =>
+    (rows || []).map((r, idx) => ({
+      ...r,
+      __rid: `${role}__${idx}` // unique inside this grid regardless of user_id collisions
+    }))
+
   return (
     <>
-      {/* {selectedLabelsDataLack.map(val => (
-        <div style={containerStyle} key={val.id}>
-          <h5 style={{ marginBottom: '8px' }}>{val.id.charAt(0).toUpperCase() + val.id.slice(1)}</h5>
-          <div className='example-wrapper'>
-            <div style={gridStyle}>
-              <AgGridReact
-                theme={theme}
-                ref={gridRef}
-                rowData={selectedData || []}
-                columnDefs={connectDataLack ? column : columnDefs}
-                defaultColDef={defaultColDef}
-                autoGroupColumnDef={autoGroupColumnDef}
-                rowSelection='multiple'
-                groupSelectsChildren={true}
-                groupSelects='descendants'
-                animateRows={true}
-                suppressAggFuncInHeader={true}
-                suppressRowClickSelection={true}
-                pagination={pagination}
-                paginationPageSize={paginationPageSize}
-                paginationPageSizeSelector={paginationPageSizeSelector}
-                onSelectionChanged={handleSelectionChanged}
-                groupIncludeFooter={true}
-                onFirstDataRendered={onFirstDataRendered}
-                onRowDataUpdated={onRowDataUpdated}
-                overlayNoRowsTemplate={'<span>Choose filters to display data</span>'}
-              />
-            </div>
-          </div>
-        </div>
-      ))} */}
-      {/* <div style={containerStyle}>
-      <div className='example-wrapper'>
-        <div style={gridStyle}>
-          <AgGridReact rowData={rowData} columnDefs={columnDefs} defaultColDef={defaultColDef} />
-        </div>
-      </div>
-      </div> */}
-
-      {Object.entries(selectedData).map(([role, rows]) =>
+      {Object?.entries(selectedData).map(([role, rows]) =>
         Array.isArray(rows) && rows.length > 0 ? (
-          <div key={role} className='rounded-lg border bg-white shadow-sm'>
-            <div className='px-4 py-3 border-b'>
-              <h3 className='text-base font-semibold'>{toTitle(role)}</h3>
-              <p className='text-xs text-gray-500'>{rows.length} records</p>
+          <div key={role} className='rounded-lg border bg-white shadow-sm mb-4'>
+            <div className='px-4 py-3 border-b flex items-center justify-between'>
+              <h3 className='text-base font-semibold'>{toTitle(role === 'guardian' ? 'Parent' : (role as string))}</h3>
             </div>
+
             <div className='p-4'>
               <div className='ag-theme-quartz' style={{ width: '100%', height: 420 }}>
                 <AgGridReact
-                  ref={gridRef}
-                  rowData={rows}
+                  // use stamped rows
+                  rowData={withStableKeys(role as string, rows as any[])}
+                  // 2) Use only the stamped key for getRowId (no collisions; stable across refresh)
+                  getRowId={p => p.data.__rid}
                   columnDefs={[
                     {
                       headerName: '',
@@ -257,21 +256,21 @@ const AudienceGrid = ({ setSelectedIds, selectedData, connectDataLack, selectedL
                       headerCheckboxSelection: true,
                       width: 50,
                       pinned: 'left',
-                      sortable: false, // 👈 disable sorting
-                      filter: false // 👈 disable filtering
+                      sortable: false,
+                      filter: false
                     },
-                    ...buildCols(rows) // rest of your dynamic columns
+                    ...buildCols(rows as any[])
                   ]}
-                  onFirstDataRendered={onFirstDataRendered}
+                  onFirstDataRendered={onFirstDataRenderedFactory(role as string)}
+                  onSelectionChanged={onSelectionChangedFactory(role as string)}
                   defaultColDef={{ flex: 1, resizable: true, filter: true }}
                   rowSelection='multiple'
                   suppressRowClickSelection={true}
                   suppressCellFocus
                   overlayNoRowsTemplate={'<span style="padding:10px;">No data</span>'}
                   pagination={true}
-                  paginationPageSize={10}
-                  paginationPageSizeSelector={[10, 25, 50, 100]}
-                  onSelectionChanged={onSelectionChanged}
+                  paginationPageSize={25}
+                  paginationPageSizeSelector={[25, 50, 100, 200, 500]}
                 />
               </div>
             </div>

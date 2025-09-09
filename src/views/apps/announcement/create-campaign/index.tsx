@@ -43,6 +43,7 @@ import { ShowErrorToast, ShowSuccessToast } from '@/comman/toastsCustom/Toast'
 import Loader from '@/components/Loader'
 import FilterCampaign from './FilterCampaign'
 import { email } from 'valibot'
+import LocalAudienceGrid from './LocalAudienceGrid'
 
 const CreateCampaign = () => {
   const router = useRouter()
@@ -58,6 +59,7 @@ const CreateCampaign = () => {
   const [selectedChannel, setSelectedChannel] = useState<string[]>([])
   const [rolesList, setRolesList] = useState<RoleOption[]>([])
   const [selectedData, setSelectedData] = useState([])
+  // const [selectedData, setSelectedData] = useState<any[]>([])
   const [startDateTime, setStartDateTime] = useState<Dayjs | null>(dayjs())
   //dataLack
   const [rolesListDataLack, setRolesListDataLack] = useState<RoleOption[]>([])
@@ -77,18 +79,26 @@ const CreateCampaign = () => {
   const [selectedLabels, setSelectedLabels] = useState([])
   const [openDialog, setOpenDialog] = useState(false)
   const [openChart, setOpenChart] = useState(false)
+
   const [viewEmailLog, setViewEmailLog] = useState([])
+  
   const [viewNotificationLog, setViewNotificationLog] = useState([])
+  
+  const [viewWhatsappLog, setViewWhatsappLog] = useState([])
+  
+  const [viewSmsLog, setViewSmsLog] = useState([])
+
   const [error, setError] = useState('')
-  const [errorMode, setErrorMode] = useState('')
-  //   const [error, setError] = useState({
-  //   message: '',
-  //   mode: ''
-  // })
+  const [selectRowId, setSelectRowId] = useState([])
+
+  //filterEdittime
+  const [filterWishSelectedRole, setFilterWishSelectedRole] = useState<RoleOption[]>([])
+
   const [paginationInfoLog, setPaginationInfoLog] = useState({
     page: 0,
     perPage: 10
   })
+
   // Email
   const [paginationEmail, setPaginationEmail] = useState({ page: 0, perPage: 10 })
   const [totalRowsEmail, setTotalRowsEmail] = useState(0)
@@ -96,10 +106,16 @@ const CreateCampaign = () => {
   // Notification
   const [paginationNotification, setPaginationNotification] = useState({ page: 0, perPage: 10 })
   const [totalRowsNotification, setTotalRowsNotification] = useState(0)
+
+  //Whatsapp
+  const [paginationWhatsapp, setPaginationWhatsapp] = useState({ page: 0, perPage: 10 })
+  const [totalRowsWhatsapp, setTotalRowsWhatsapp] = useState(0)
+
   const [connectDataLack, setConnectDataLack] = useState('')
   const [roleLoading, setroleLoading] = useState(false)
   const [isLoading, setisLoading] = useState(false)
   const [loaderMain, setloaderMain] = useState(false)
+  const [columnSelectedEdit, setColumnSelectedEdit] = useState()
 
   // Comman column Filter
   const [commanColumnFilter, setCommanColumnFilter] = useState<any>({
@@ -166,6 +182,33 @@ const CreateCampaign = () => {
     house: ''
   })
 
+  const [paginationDatalack, setPaginationDatalack] = useState(100)
+  const data12 = [
+    {
+      id: 'email',
+      role: 'parent'
+    },
+    {
+      id: 'email',
+      role: 'student'
+    },
+    {
+      id: 'first_name',
+      role: 'student'
+    },
+    {
+      id: 'gender',
+      role: 'student'
+    },
+    {
+      id: 'last_name',
+      role: 'student'
+    },
+    {
+      id: 'mobile_phone',
+      role: 'student'
+    }
+  ]
   const isRecurring = mode === 'recurring'
 
   const channels = [
@@ -215,7 +258,7 @@ const CreateCampaign = () => {
   }
 
   const handleFilterRoleUserChangeDataLack = (newValues: any) => {
-    setFilterWishSelectedLabelsDataLack(newValues)
+    // setFilterWishSelectedLabelsDataLack(newValues)
 
     if (newValues && newValues.length > 0) {
     } else {
@@ -253,7 +296,6 @@ const CreateCampaign = () => {
       }
     } catch (err) {
       return null
-      setroleLoading(false)
     }
   }
 
@@ -267,7 +309,8 @@ const CreateCampaign = () => {
       const select = selectedLabelsDataLack.map((val: any) => val.id)
 
       const body = {
-        roles: select
+        roles: select,
+        showOnlyRole: true
       }
 
       const res = await api.post(`${endPointApi.postfilterDataLack}`, body)
@@ -304,7 +347,7 @@ const CreateCampaign = () => {
           }))
           allFilters.push(...teacherFilters)
         }
-
+        setColumnSelectedEdit(res.data.column_names)
         setFilterWishDataLack(allFilters)
       }
     } catch (err) {
@@ -315,8 +358,10 @@ const CreateCampaign = () => {
   }
 
   useEffect(() => {
-    if (selectedLabelsDataLack.length > 0) {
-      fetchFilterDataLack()
+    if (!ids) {
+      if (selectedLabelsDataLack.length > 0) {
+        fetchFilterDataLack()
+      }
     }
   }, [selectedLabelsDataLack])
 
@@ -343,100 +388,171 @@ const CreateCampaign = () => {
   const fetchEditCampign = async () => {
     setloaderMain(true)
     try {
-      // const body = {
-      //   roles: ['student', 'parent'],
-      //   announcement_id: localStorage.getItem('announcementId'),
-      //   campaign_id: ids
-      // }
-      // const resFilter = await api.post(`${endPointApi.postfilterDataLack}`, body)
-      // const selected = resFilter.data.roles.map((item: any) => ({
-      //   id: item,
-      //   name: item.charAt(0).toUpperCase() + item.slice(1)
-      // }))
-      // console.log("resFilter.data.filters",resFilter.data);
+      const body = {
+        announcement_id: localStorage.getItem('announcementId'),
+        campaign_id: ids,
+        showOnlyRole: true,
+        tenant_id: adminStore.tenant_id,
+        school_id: adminStore.school_id
+      }
 
-      // if (resFilter.data.status === 'success') {
-      // setSelectedLabelsDataLack(selected)
-      // const filters = resFilter.data.filters
-      // const allFilters: RoleOption[] = []
+      const resFilter = await api.post(`${endPointApi.postfilterDataLackEdit}`, body)
 
-      // if (filters.parent && Array.isArray(filters.parent)) {
-      //   const parentFilters = filters.parent.map((item: any) => ({
-      //     id: item.column_name,
-      //     name: item.filter_name,
-      //     rol_name: 'parent',
-      //     filter_values: item.filter_values
-      //   }))
-      //   allFilters.push(...parentFilters)
-      // }
+      // roles → selected labels
+      const rolesArr: any[] = Array.isArray(resFilter?.data?.roles) ? resFilter.data.roles : []
+      const selectedRoles = rolesArr.map((item: any) => ({
+        id: item,
+        name: String(item).charAt(0).toUpperCase() + String(item).slice(1)
+      }))
+      console.log('resFilter?.data?.data', resFilter?.data?.data)
 
-      // if (filters.student && Array.isArray(filters.student)) {
-      //   const studentFilters = filters.student.map((item: any) => ({
-      //     id: item.column_name,
-      //     name: item.filter_name,
-      //     rol_name: 'student',
-      //     filter_values: item.filter_values
-      //   }))
-      //   allFilters.push(...studentFilters)
-      // }
+      const toArray = (val: any): any[] => {
+        if (Array.isArray(val)) return val
+        if (val && typeof val === 'object') return Object.values(val)
+        return []
+      }
+      // const firstUsers = toArray(resFilter?.data?.data)
+      setSelectedData(resFilter?.data?.data)
 
-      // if (filters.teacher && Array.isArray(filters.teacher)) {
-      //   const teacherFilters = filters.teacher.map((item: any) => ({
-      //     id: item.column_name,
-      //     name: item.filter_name,
-      //     rol_name: 'teacher',
-      //     filter_values: item.filter_values
-      //   }))
-      //   allFilters.push(...teacherFilters)
-      // }
-      // console.log("allFilters",allFilters);
+      if (resFilter?.data?.status === 'success') {
+        setSelectedLabelsDataLack(selectedRoles)
 
-      // setFilterWishDataLack(allFilters)
-      // setSelectedData(resFilter.data.filters)
-      // }
+        const allFilters: RoleOption[] = []
+        const filtersCatalog = resFilter?.data?.filters_catalog
+
+        const initialStudentForm: Record<string, any> = {}
+        const initialParentForm: Record<string, any> = {}
+        const initialTeacherForm: Record<string, any> = {}
+
+        const processRoleFilters = (
+          roleFilters: any[] | undefined,
+          roleName: string,
+          initialFormState: Record<string, any>
+        ) => {
+          if (!Array.isArray(roleFilters)) return
+
+          const processed: RoleOption[] = roleFilters.map((item: any) => {
+            if (item?.update_value === true && item?.newfilter_column !== null && item?.column_name) {
+              let value = item.newfilter_column
+
+              if (typeof value === 'string' && value.startsWith('"') && value.endsWith('"')) {
+                value = value.slice(1, -1)
+              }
+
+              // dropdowns expect array; text expects string
+              initialFormState[item.column_name] = item.filter_values !== null ? [value] : value
+            }
+
+            return {
+              id: item.column_name,
+              name: item.filter_name,
+              rol_name: roleName,
+              filter_values: item.filter_values,
+              update_value: !!item.update_value,
+              newfilter_column: item.newfilter_column ?? null
+            }
+          })
+
+          allFilters.push(...processed)
+        }
+
+        // fill role filters
+        processRoleFilters(filtersCatalog?.parent, 'parent', initialParentForm)
+        processRoleFilters(filtersCatalog?.student, 'student', initialStudentForm)
+        processRoleFilters(filtersCatalog?.teacher, 'teacher', initialTeacherForm)
+
+        // apply prefilled states
+        if (Object.keys(initialParentForm).length) {
+          setParentForm(prev => ({ ...prev, ...initialParentForm }))
+        }
+        if (Object.keys(initialStudentForm).length) {
+          setStudentForm(prev => ({ ...prev, ...initialStudentForm }))
+        }
+        if (Object.keys(initialTeacherForm).length) {
+          setTeacherForm(prev => ({ ...prev, ...initialTeacherForm }))
+        }
+
+        setFilterWishDataLack(allFilters)
+        setFilterWishSelectedRole(resFilter?.data?.column_names)
+        console.log('11111111', resFilter.data.column_names)
+
+        const formatted = resFilter?.data?.column_names?.split(',')?.map((val: any) => ({
+          id: val,
+          name: val
+        }))
+        setFilterWishSelectedLabelsDataLack(formatted)
+        console.log('1111110000', formatted)
+      }
+
+
       const res = await api.get(`${endPointApi.getCampaignAnnounceWise}`, {
         params: {
           announcement_id: localStorage.getItem('announcementId'),
           campaign_id: ids
         }
       })
+      console.log('resss', res)
 
-      if (res.data.status === 200) {
-        // if (Array.isArray(res?.data?.role_only)) {
-        //   const selected = res.data.role_only.map((item: any) => ({
-        //     id: item.role_id,
-        //     name: item.role_name
-        //   }))
-        //   setSelectedLabels(selected)
-        //   setSelectedLabelsDataLack(selected)
-        // }
-        const formatted = res.data.column_name.split(',').map((val: any) => ({
-          id: val,
-          name: val
-        }))
-        setSelectedData(res.data.users)
-        setNote(res.data.note)
-        setStatus(res.data.campaign_status)
-        setMode(res.data.publish_mode)
-        setScheduleType(res.data.schedule)
-        setRecurringCount(res.data.frequency_count)
-        setRecurringType(res.data.frequency_type)
-        setSelectedChannel(res.data.channels)
-        setStartDateTime(dayjs(res.data.campaign_date + ' ' + res.data.formatted_campaign_time))
-        setAnnouncementTitle(res.data.announcement.title)
-        setFilterWishSelectedLabelsDataLack(formatted)
-        setloaderMain(false)
+      if (res?.data?.status === 200) {
+        if (Array.isArray(res?.data?.role_only)) {
+          const roleOnly = res.data.role_only.map((item: any) => ({
+            id: item.role_id,
+            name: item.role_name
+          }))
+          setSelectedLabels(roleOnly)
+        }
+
+        // column_name in this response might be string or array; handle both
+        const toIdNameArray2 = (input: any) => {
+          if (Array.isArray(input)) {
+            return input
+              .map((v: any) => {
+                const s = String(v ?? '').trim()
+                return s ? { id: s, name: s } : null
+              })
+              .filter(Boolean)
+          }
+          if (typeof input === 'string') {
+            return input
+              .split(',')
+              .map((s: string) => s.trim())
+              .filter(Boolean)
+              .map((v: string) => ({ id: v, name: v }))
+          }
+          return []
+        }
+
+        // If you need it for anything else later:
+        // const formatted2 = toIdNameArray2(res?.data?.column_name);
+        console.log('res?.data?.users', res?.data?.users)
+
+        // setSelectedData(res?.data?.users)
+        setNote(res?.data?.note)
+        setStatus(res?.data?.campaign_status)
+        setMode(res?.data?.publish_mode)
+        setScheduleType(res?.data?.schedule)
+        setRecurringCount(res?.data?.frequency_count)
+        setRecurringType(res?.data?.frequency_type)
+        setSelectedChannel(res?.data?.channels)
+        setStartDateTime(dayjs(`${res?.data?.campaign_date} ${res?.data?.formatted_campaign_time}`))
+        setAnnouncementTitle(res?.data?.announcement?.title)
       }
     } catch (err: any) {
-      if (err.response?.status === 500) {
+      if (err?.response?.status === 500) {
         toast.error('Internal Server Error.')
-        setloaderMain(false)
+      } else {
+        console.error('fetchEditCampign error:', err)
       }
+    } finally {
+      // Always turn off loader so UI doesn't get stuck
+      setloaderMain(false)
     }
   }
 
   useEffect(() => {
-    fetchEditCampign()
+    if (ids) {
+      fetchEditCampign()
+    }
   }, [ids])
 
   const statuses = ['Draft', 'Ready', 'In Progress', 'Stopped', 'Done'] as const
@@ -504,7 +620,7 @@ const CreateCampaign = () => {
 
   useEffect(() => {
     getViewLog()
-  }, [openDialog, paginationInfoLog.page, paginationInfoLog.perPage])
+  }, [openDialog, paginationEmail.page, paginationEmail.perPage])
 
   const getNotificationViewLog = async () => {
     if (selectedChannel.includes('push_notification')) {
@@ -532,7 +648,35 @@ const CreateCampaign = () => {
 
   useEffect(() => {
     getNotificationViewLog()
-  }, [openDialog, paginationInfoLog.page, paginationInfoLog.perPage])
+  }, [openDialog, paginationNotification.page, paginationNotification.perPage])
+
+  const getWhatsappViewLog = async () => {
+    if (selectedChannel.includes('wp')) {
+      const formdata = new FormData()
+
+      formdata.append('announcement_id', announcementId || '')
+      formdata.append('campaign_id', ids)
+      formdata.append('search', '')
+      formdata.append('per_page', paginationWhatsapp.perPage.toString())
+      formdata.append('page', (paginationWhatsapp.page + 1).toString())
+      try {
+        const res = await api.post(`${endPointApi.postcampaignWhatsappLogGet}`, formdata)
+
+        setViewWhatsappLog(res.data)
+        setTotalRowsWhatsapp(res.data.total)
+      } catch (err: any) {
+        if (err.response?.status === 500) {
+          toast.error('Internal Server Error.')
+        } else {
+          toast.error(err?.response?.data?.message || 'Something went wrong')
+        }
+      }
+    }
+  }
+
+  useEffect(() => {
+    getWhatsappViewLog()
+  }, [openDialog, paginationWhatsapp.page, paginationWhatsapp.perPage])
 
   useEffect(() => {
     setConnectDataLack(connection?.connectDataLack)
@@ -569,6 +713,7 @@ const CreateCampaign = () => {
   //column
   type Item = { id: string; role: string }
 
+  // Group items by role
   const groupByRole = (items: Item[]) =>
     items.reduce<Record<string, string[]>>((acc, { id, role }) => {
       if (!acc[role]) acc[role] = []
@@ -576,21 +721,15 @@ const CreateCampaign = () => {
       return acc
     }, {})
 
+  // ✅ No defaults injected
   const grouped = groupByRole(filterWishSelectedLabelsDataLack)
-
-  // 👉 Always prepend defaults
-  const defaults = ['first_name', 'last_name']
-
-  Object.keys(grouped).forEach(role => {
-    grouped[role] = [...defaults, ...grouped[role].filter(id => !defaults.includes(id))]
-  })
 
   const goFilterData = async () => {
     setisLoading(true)
 
     try {
       const select = selectedLabelsDataLack.map((val: any) => val.id)
-      const selectColumn = filterWishSelectedLabelsDataLack.map((val: any) => val.id)
+      // const selectColumn = filterWishSelectedLabelsDataLack.map((val: any) => val.id)
 
       const body = {
         roles: select,
@@ -600,17 +739,19 @@ const CreateCampaign = () => {
         announcement_id: 0,
         tenant_id: adminStore.tenant_id,
         school_id: adminStore.school_id.toString(),
-        page: 1,
-        per_page: 10
+        // page: 1,
+        // per_page: 100,
+        showOnlyRole: false
       }
 
       const res = await api.post(`${endPointApi.postfilterDataLack}`, body)
 
       if (res.data.status === 'success') {
         setSelectedData(res.data.data)
+        setPaginationDatalack(res.data.pagination)
       } else {
         console.warn('Unexpected response:', res.data)
-        setFilterWishSelectedLabelsDataLack([])
+        // setFilterWishSelectedLabelsDataLack([])
         setFilterWishDataLack([])
 
         // Optionally: ShowErrorToast(res.data.message)
@@ -619,8 +760,6 @@ const CreateCampaign = () => {
       console.error('Error fetching data:', err)
     } finally {
       setisLoading(false)
-      // setFilterWishSelectedLabelsDataLack([])
-      // setFilterWishDataLack([])
     }
   }
 
@@ -641,10 +780,12 @@ const CreateCampaign = () => {
         }
       }
 
+      // if (connectDataLack == 0) {
       if (!selectedIds || selectedIds.length === 0) {
         ShowErrorToast('Please select at least one user to launch the campaign.')
         return
       }
+      // }
 
       if (mode === '') {
         ShowErrorToast('Please select publishing mode.')
@@ -659,13 +800,13 @@ const CreateCampaign = () => {
       let timeampm = ''
 
       if (dayjs(startDateTime).isValid()) {
-        const formatted = dayjs(startDateTime).format('YYYY-MM-DD hh:mm A')
+        const formatted = dayjs(startDateTime).format('YYYY-MM-DD HH:mm')
         const [datePart, timePart, ampm] = formatted.split(' ')
         date = datePart || ''
         time = timePart || ''
         timeampm = ampm || ''
       } else {
-        const formatted = dayjs().format('YYYY-MM-DD hh:mm A')
+        const formatted = dayjs().format('YYYY-MM-DD HH:mm')
         const [datePart, timePart, ampm] = formatted.split(' ')
         date = datePart || ''
         time = timePart || ''
@@ -688,8 +829,8 @@ const CreateCampaign = () => {
         frequency_count: mode == 'one_time' ? 1 : recurringCount,
         campaign_date: scheduleType === 'schedule' ? date : dayjs().format('YYYY-MM-DD'),
         campaign_time: time,
-        campaign_ampm: timeampm,
-        role_ids: '1',
+        campaign_ampm: 'am',
+        // role_ids: '1',
         column_name: selectedFilter,
         filters: filters,
         db_selected_column: grouped
@@ -705,6 +846,59 @@ const CreateCampaign = () => {
               locale as Locale
             )
           )
+          setStudentForm({
+            first_name: '',
+            gender: '',
+            last_name: '',
+            mobile_phone1: '',
+            email: '',
+            par_code: '',
+            student_code: '',
+            preferred_name: '',
+            year_group: '',
+            class_code: '',
+            dob: '',
+            entry_date: '',
+            exit_date: '',
+            status: '',
+            house: ''
+          })
+          setTeacherForm({
+            first_name: '',
+            gender: '',
+            teacher_code: '',
+            emp_code: '',
+            salutation: '',
+            surname: '',
+            other_name: '',
+            preferred_name: '',
+            dob: '',
+            start_date: '',
+            end_date: '',
+            emp_status: '',
+            award_code: '',
+            award_description: '',
+            rol_code: '',
+            rol_description: '',
+            position_title: '',
+            p_mobile: '',
+            p_email: '',
+            school_email: ''
+          })
+          setParentForm({
+            par_code: '',
+            par_name: '',
+            contact_type: [],
+            email: '',
+            mobile_phone1: '',
+            mobile_phone2: '',
+            addr1: '',
+            addr2: '',
+            town_sub: '',
+            state_code: '',
+            post_code: '',
+            home_phone: ''
+          })
         } else {
           ShowErrorToast('Invalid announcementId')
           setisLoading(false)
@@ -740,11 +934,11 @@ const CreateCampaign = () => {
           Announcement / {'Create'} Campaign
         </span>
 
-        {ids && (
+        {/* {ids && (
           <Button variant='contained' onClick={() => setOpenDialog(true)}>
             View Log
           </Button>
-        )}
+        )} */}
       </p>
 
       <Card sx={{ mt: 4 }}>
@@ -756,21 +950,21 @@ const CreateCampaign = () => {
               </Grid>
             </Grid>
           ) : ( */}
-            <TextField
-              label='Campaign title'
-              placeholder='Campaign title.....'
-              value={note}
-              onChange={e => {
-                if (e.target.value?.length <= 100) {
-                  setNote(e.target.value)
-                }
-              }}
-              fullWidth
-              multiline
-              minRows={1}
-              error={note?.length > 100}
-              helperText={`${note?.length || 0}/100 characters`}
-            />
+          <TextField
+            label='Campaign title'
+            placeholder='Campaign title.....'
+            value={note}
+            onChange={e => {
+              if (e.target.value?.length <= 100) {
+                setNote(e.target.value)
+              }
+            }}
+            fullWidth
+            multiline
+            minRows={1}
+            error={note?.length > 100}
+            helperText={`${note?.length || 0}/100 characters`}
+          />
           {/* )} */}
           {/* Icon positioned at bottom right */}
           <Box
@@ -816,26 +1010,30 @@ const CreateCampaign = () => {
         setFilterWishCommonColumn={setFilterWishCommonColumn}
         setFilterWishSelectedLabelsDataLack={setFilterWishSelectedLabelsDataLack}
         setSelectedLabelsDataLack={setSelectedLabelsDataLack}
-        selectedData={selectedData}
         goFilterData={goFilterData}
         setSelectedData={setSelectedData}
         setSelectedLabels={setSelectedLabels}
+        columnSelectedEdit={columnSelectedEdit}
+        filterWishSelectedRole={filterWishSelectedRole}
+        ids={ids}
       />
-      <Card sx={{ mt: 4 }}>
-        <Box p={6}>
-          {/* <Button variant='contained'>
-              Bulk Delete
-            </Button> */}
-          {/* Grid */}
+      {/* <Card sx={{ mt: 4 }}> */}
+      <Box mt={4}>
+        {connectDataLack == 0 ? (
+          <LocalAudienceGrid selectedData={selectedData} setSelectedIds={setSelectedIds} />
+        ) : (
           <AudienceGrid
             selectedData={selectedData}
             setSelectedIds={setSelectedIds}
             connectDataLack={connectDataLack}
             selectedLabelsDataLack={selectedLabelsDataLack}
+            setSelectRowId={setSelectRowId}
+            selectRowId={selectRowId}
+            paginationDatalack={paginationDatalack}
           />
-          {/* <AudienceGrid selectedData={selectedData} setSelectedIds={setSelectedIds} /> */}
-        </Box>
-      </Card>
+        )}
+      </Box>
+      {/* </Card> */}
       <Card sx={{ mt: 4, overflow: 'visible' }}>
         <Box p={6}>
           <Grid container spacing={4}>
@@ -884,7 +1082,8 @@ const CreateCampaign = () => {
                       label='Start Date Time'
                       value={startDateTime}
                       onChange={newValue => setStartDateTime(newValue)}
-                      format='DD-MM-YYYY hh:mm A'
+                      format='DD-MM-YYYY HH:mm'
+                      ampm={false}
                       minDateTime={dayjs()}
                       slotProps={{
                         textField: {
@@ -1238,6 +1437,10 @@ const CreateCampaign = () => {
           totalRowsEmail={totalRowsEmail}
           paginationNotification={paginationNotification}
           paginationEmail={paginationEmail}
+          paginationWhatsapp={paginationWhatsapp}
+          setPaginationWhatsapp={setPaginationWhatsapp}
+          totalRowsWhatsapp={totalRowsWhatsapp}
+          viewWhatsappLog={viewWhatsappLog}
         />
       )}
     </>

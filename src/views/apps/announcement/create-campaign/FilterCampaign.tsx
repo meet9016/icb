@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useEffect, useRef } from 'react'
 import {
   Button,
   TextField,
@@ -56,6 +56,9 @@ export interface Props {
   setSelectedLabels?: any
   setFilterWishCommonColumn?: any
   filterWishCommonColumn?: any
+  columnSelectedEdit?: any
+  filterWishSelectedRole?: any
+  ids?: any
 }
 const FilterCampaign = ({
   roleLoading,
@@ -81,7 +84,10 @@ const FilterCampaign = ({
   setSelectedData,
   setSelectedLabels,
   filterWishCommonColumn,
-  setFilterWishCommonColumn
+  setFilterWishCommonColumn,
+  columnSelectedEdit,
+  filterWishSelectedRole,
+  ids
 }: Props) => {
   //Comman Column Filter
   // const handleSelectCommonColumn = (id: number) => {
@@ -104,7 +110,7 @@ const FilterCampaign = ({
     setFilterWishSelectedLabelsDataLack(prev => {
       const idx = prev.findIndex(x => x.id === id && x.role === roleName)
       if (idx !== -1) {
-        return prev.filter((_, i) => i !== idx) // remove only that role's chip
+        return prev.filter((_, i) => i !== idx)
       }
       return [...prev, { id, role: roleName }]
     })
@@ -119,6 +125,7 @@ const FilterCampaign = ({
 
   const handleFilterChange = (newValues: any) => {
     setSelectedLabels(newValues)
+    // setParentForm
   }
 
   const handleChangeParentColumnFilter = (field: string, value: string) => {
@@ -145,9 +152,9 @@ const FilterCampaign = ({
   const handleFilterChangeDataLack = (newValues: any) => {
     setSelectedLabelsDataLack(newValues)
 
-    if (newValues && newValues.length > 0) {
-    } else {
-      setSelectedData([]) // or show all
+    // optional: if nothing is selected → reset all
+    if (!newValues || newValues.length === 0) {
+      setSelectedData([]) // or reset all forms
     }
   }
 
@@ -165,14 +172,71 @@ const FilterCampaign = ({
     return acc
   }, {})
 
-  const excludedIds = ['last_name', 'first_name', 'gender']
-
-  const filteredData = filterWishDataLack.filter(item => !excludedIds.includes(item.id))
-  const groupedDataRoleWise = filteredData?.reduce((acc: any, item: any) => {
+  //Default Parent, student, teacher selected
+  const groupedDataRoleWise = filterWishDataLack?.reduce((acc: any, item: any) => {
     if (!acc[item.rol_name]) acc[item.rol_name] = []
     acc[item.rol_name].push(item)
     return acc
   }, {})
+
+  /** Normalize helpers */
+  const toKey = (s: any) =>
+    String(s ?? '')
+      .toLowerCase()
+      .trim()
+      .replace(/[^a-z0-9]+/g, '_')
+      .replace(/^_+|_+$/g, '')
+
+  const sameKey = (a: any, b: any) => toKey(a) === toKey(b)
+
+  /** Role-wise default field keys (add synonyms you use) */
+  const defaultRoleSelections: Record<string, string[]> = {
+    parent: ['email', 'm_phone1', 'mobile_1', 'm_phone2', 'mobile_2', 'phone_2', 'par_name'],
+    student: ['first_name', 'last_name', 'email', 'gender', 'mobile_phone'],
+    teacher: ['first_name', 'gender', 'p_mobile', 'other_name', 'p_email']
+  }
+
+  /** Track which roles have already been seeded (so each role seeds once) */
+  const seededRolesRef = useRef<Set<string>>(new Set())
+
+  useEffect(() => {
+    if (!groupedDataRoleWise || Object.keys(groupedDataRoleWise).length === 0) return
+
+    Object.entries(groupedDataRoleWise).forEach(([roleKey, items]: [string, any[]]) => {
+      if (!items || items.length === 0) return
+
+      const roleNorm = toKey(roleKey)
+      if (seededRolesRef.current.has(roleNorm)) return // already seeded this role
+
+      const wanted = ids ? filterWishSelectedRole[roleNorm] : defaultRoleSelections[roleNorm]
+      if (!wanted || wanted.length === 0) {
+        // No defaults defined for this role: mark as seeded to avoid rechecking forever
+        seededRolesRef.current.add(roleNorm)
+        return
+      }
+
+      let didSeedForThisRole = false
+
+      items.forEach(item => {
+        const itemFieldKey = toKey(item?.name ?? item?.label ?? item?.key)
+        if (!wanted.includes(itemFieldKey)) return
+
+        const itemRole = item?.rol_name ?? roleKey // ensure same value you store in state
+        const alreadySelected = filterWishSelectedLabelsDataLack?.some(
+          (x: any) => x.id === item.id && sameKey(x.role, itemRole)
+        )
+
+        if (!alreadySelected) {
+          handleSelect(item.id, itemRole) // your toggler should add when not selected
+          didSeedForThisRole = true
+        }
+      })
+
+      // Mark this role as seeded regardless (prevents repeated seeding loops)
+      seededRolesRef.current.add(roleNorm)
+    })
+  }, [groupedDataRoleWise, filterWishSelectedLabelsDataLack, filterWishSelectedRole]) // runs when roles/items/state change
+
   const groupedData = filterWishDataLack?.reduce((acc: any, item: any) => {
     if (!acc[item.rol_name]) acc[item.rol_name] = []
     acc[item.rol_name].push(item)
@@ -183,6 +247,67 @@ const FilterCampaign = ({
     parent: 'rgb(102 108 255 / 0.32)', // green
     teacher: 'rgb(109 120 141 / 0.32)', // red
     student: 'rgb(255 77 73 / 0.32)' // blue
+  }
+
+  //clear filter
+  const clearStudentFilter = () => {
+    setStudentForm({
+      first_name: '',
+      gender: '',
+      last_name: '',
+      mobile_phone1: '',
+      email: '',
+      par_code: '',
+      student_code: '',
+      preferred_name: '',
+      year_group: '',
+      class_code: '',
+      dob: '',
+      entry_date: '',
+      exit_date: '',
+      status: '',
+      house: ''
+    })
+  }
+  const clearParentFilter = () => {
+    setParentForm({
+      par_code: '',
+      par_name: '',
+      contact_type: [],
+      email: '',
+      mobile_phone1: '',
+      mobile_phone2: '',
+      addr1: '',
+      addr2: '',
+      town_sub: '',
+      state_code: '',
+      post_code: '',
+      home_phone: ''
+    })
+  }
+  const clearTeacherFilter = () => {
+    setTeacherForm({
+      first_name: '',
+      gender: '',
+      teacher_code: '',
+      emp_code: '',
+      salutation: '',
+      surname: '',
+      other_name: '',
+      preferred_name: '',
+      dob: '',
+      start_date: '',
+      end_date: '',
+      emp_status: '',
+      award_code: '',
+      award_description: '',
+      rol_code: '',
+      rol_description: '',
+      position_title: '',
+      p_mobile: '',
+      p_email: '',
+      school_email: ''
+    })
   }
   return (
     <>
@@ -217,63 +342,6 @@ const FilterCampaign = ({
                     />
                   </Stack>
 
-                  {/* <Typography variant='h6' fontWeight={600}>
-                    Comman Columns
-                  </Typography>
-                  <Grid container spacing={1}>
-                    <Grid item xs={12} md={2}>
-                      <TextField
-                        label='First name'
-                        fullWidth
-                        value={commanColumnFilter.first_name}
-                        onChange={e => handleChangeColumnFilter('first_name', e.target.value)}
-                      />
-                    </Grid>
-
-                    <Grid item xs={12} md={2}>
-                      <TextField
-                        label='Last name'
-                        fullWidth
-                        value={commanColumnFilter.last_name}
-                        onChange={e => handleChangeColumnFilter('last_name', e.target.value)}
-                      />
-                    </Grid>
-
-                    <Grid item xs={12} md={2}>
-                      <TextField
-                        label='Email'
-                        fullWidth
-                        value={commanColumnFilter.email}
-                        onChange={e => handleChangeColumnFilter('email', e.target.value)}
-                      />
-                    </Grid>
-
-                    <Grid item xs={12} md={2}>
-                      <TextField
-                        label='Phone'
-                        fullWidth
-                        value={commanColumnFilter.phone}
-                        onChange={e => handleChangeColumnFilter('phone', e.target.value)}
-                      />
-                    </Grid>
-
-                    <Grid item xs={12} md={2}>
-                      <TextField
-                        label='Gender'
-                        select
-                        fullWidth
-                        value={commanColumnFilter.gender}
-                        onChange={e => handleChangeColumnFilter('gender', e.target.value)}
-                      >
-                        {genderDropDown.map((option, index) => (
-                          <MenuItem key={index} value={option.value}>
-                            {option.name}
-                          </MenuItem>
-                        ))}
-                      </TextField>
-                    </Grid>
-                  </Grid> */}
-
                   {/* Role-wise Filters */}
                 </Stack>
               </Grid>
@@ -289,7 +357,7 @@ const FilterCampaign = ({
                 value={selectedLabels}
                 onChange={(event, newValue) => handleFilterChange(newValue)}
                 sx={{ width: 400, marginBottom: 2 }}
-                renderInput={params => <TextField {...params} label='Select Roles' />}
+                renderInput={params => <TextField {...params} />}
               />
             </Grid>
           )}
@@ -300,14 +368,24 @@ const FilterCampaign = ({
         <>
           <Card sx={{ mt: 4 }}>
             <Box p={6}>
-              <Typography variant='h6' fontWeight={600} sx={{ mb: 2 }}>
-                Role-wise Filters
-              </Typography>
+              <Box display='flex' alignItems='center' justifyContent='space-between' sx={{ mb: 2 }}>
+                <Typography variant='h6' fontWeight={600}>
+                  Role-wise Filters
+                </Typography>
+                {/* <Button variant='contained' onClick={clearAllFilter}>
+                  Clear All Filters
+                </Button> */}
+              </Box>
               {selectedLabelsDataLack.some((val: any) => val.id === 'student') && (
                 <>
-                  <Typography variant='h6' fontWeight={600} sx={{ mt: 2 }}>
-                    Students
-                  </Typography>
+                  <Box display='flex' alignItems='center' justifyContent='space-between' sx={{ mb: 2 }}>
+                    <Typography variant='h6' fontWeight={600} sx={{ mt: 2, mb: 2 }}>
+                      Students
+                    </Typography>
+                    <Button variant='contained' onClick={clearStudentFilter}>
+                      Clear Student Filters
+                    </Button>
+                  </Box>
                   <Grid container spacing={1}>
                     {(groupedData?.student || []).map((field: any, index: number) => (
                       <Grid item xs={12} md={2} key={index}>
@@ -354,15 +432,20 @@ const FilterCampaign = ({
               )}
               {selectedLabelsDataLack.some((val: any) => val.id === 'parent') && (
                 <>
-                  <Typography variant='h6' fontWeight={600} sx={{ mt: 2 }}>
-                    Parents
-                  </Typography>
+                  <Box display='flex' alignItems='center' justifyContent='space-between' sx={{ mb: 2 }}>
+                    <Typography variant='h6' fontWeight={600} sx={{ mt: 2, mb: 2 }}>
+                      Parents
+                    </Typography>
+                    <Button variant='contained' onClick={clearParentFilter}>
+                      Clear Parents Filters
+                    </Button>
+                  </Box>
                   <Grid container spacing={1}>
-                    {(groupedData?.parent || []).map((field: any, index: number) => (
+                    {(groupedData?.parent ?? []).map((field: any, index: number) => (
                       <Grid item xs={12} md={2} key={index}>
-                        {field.filter_values &&
-                        field.filter_values !== null &&
-                        typeof field.filter_values === 'string' ? (
+                        {/* {console.log('field.filter_values', field.filter_values)} */}
+
+                        {field.filter_values !== null ? (
                           <TextField
                             label={field.name}
                             select
@@ -371,14 +454,56 @@ const FilterCampaign = ({
                             onChange={e => handleChangeParentColumnFilter(field.id, e.target.value)}
                             SelectProps={{
                               multiple: true,
-                              renderValue: (selected: any) => selected.join(', ')
+                              renderValue: (selected: any) => {
+                                // if JSON options → map ids back to labels
+                                try {
+                                  const parsed = JSON.parse(field.filter_values)
+                                  if (Array.isArray(parsed)) {
+                                    return selected
+                                      .map((sel: any) => {
+                                        const match = parsed.find((opt: any) => opt.contact_type === sel)
+                                        return match ? match.contact_desc : sel
+                                      })
+                                      .join(', ')
+                                  }
+                                } catch {
+                                  // fallback for comma-separated values
+                                }
+                                return selected.join(', ')
+                              }
                             }}
                           >
-                            {field.filter_values.split(',').map((option: string, i: number) => (
-                              <MenuItem key={i} value={option.trim()}>
-                                {option.trim()}
-                              </MenuItem>
-                            ))}
+                            {(() => {
+                              let options: any[] = []
+                              try {
+                                const parsed = JSON.parse(field.filter_values)
+                                if (
+                                  Array.isArray(parsed) &&
+                                  parsed.every(opt => opt.contact_type && opt.contact_desc)
+                                ) {
+                                  options = parsed.map((opt: any) => ({
+                                    value: opt.contact_type,
+                                    label: opt.contact_desc
+                                  }))
+                                } else {
+                                  options = field.filter_values.split(',').map((opt: string) => ({
+                                    value: opt.trim(),
+                                    label: opt.trim()
+                                  }))
+                                }
+                              } catch {
+                                options = field.filter_values.split(',').map((opt: string) => ({
+                                  value: opt.trim(),
+                                  label: opt.trim()
+                                }))
+                              }
+
+                              return options.map((opt, i) => (
+                                <MenuItem key={i} value={opt.value}>
+                                  {opt.label}
+                                </MenuItem>
+                              ))
+                            })()}
                           </TextField>
                         ) : (
                           <TextField
@@ -395,9 +520,14 @@ const FilterCampaign = ({
               )}
               {selectedLabelsDataLack.some((val: any) => val.id === 'teacher') && (
                 <>
-                  <Typography variant='h6' fontWeight={600} sx={{ mt: 2 }}>
-                    Teachers
-                  </Typography>
+                  <Box display='flex' alignItems='center' justifyContent='space-between' sx={{ mb: 2 }}>
+                    <Typography variant='h6' fontWeight={600} sx={{ mt: 2, mb: 2 }}>
+                      Teachers
+                    </Typography>
+                    <Button variant='contained' onClick={clearTeacherFilter}>
+                      Clear Teachers Filters
+                    </Button>
+                  </Box>
                   <Grid container spacing={1}>
                     {(groupedData?.teacher || []).map((field: any, index: number) => (
                       <Grid item xs={12} md={2} key={index}>
@@ -454,7 +584,8 @@ const FilterCampaign = ({
                   gap: 3
                 }}
               >
-                {Object.keys(commonColumnData).map(role => {
+                {/* Common Column Start */}
+                {/* {Object.keys(commonColumnData).map(role => {
                   if (!commonColumnData[role] || commonColumnData[role].length === 0) {
                     return null
                   }
@@ -471,7 +602,6 @@ const FilterCampaign = ({
                         // backgroundColor: 'background.paper'
                       }}
                     >
-                      {/* Section Title */}
                       <Typography
                         variant='subtitle1'
                         sx={{
@@ -488,7 +618,6 @@ const FilterCampaign = ({
                         Common Column
                       </Typography>
 
-                      {/* Chips */}
                       <Box
                         sx={{
                           display: 'flex',
@@ -523,16 +652,15 @@ const FilterCampaign = ({
                       </Box>
                     </Paper>
                   )
-                })}
-
-                {Object.keys(groupedDataRoleWise).map(role => {
+                })} */}
+                {/* Common Column End  */}
+                {/* {Object.keys(groupedDataRoleWise).map(role => {
                   if (!groupedDataRoleWise[role] || groupedDataRoleWise[role].length === 0) {
                     return null
                   }
 
                   return (
                     <Paper key={role} elevation={2} sx={{ p: 3 }}>
-                      {/* Section Title */}
                       <Typography
                         variant='subtitle1'
                         sx={{
@@ -549,7 +677,6 @@ const FilterCampaign = ({
                         {role}
                       </Typography>
 
-                      {/* Chips */}
                       <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1.5 }}>
                         {groupedDataRoleWise[role].map((item: any) => {
                           const roleColor = roleChipColors[role.toLowerCase()] || '#1f5634'
@@ -563,6 +690,68 @@ const FilterCampaign = ({
                               key={`${item.rol_name}-${item.id}`} // unique per role + id
                               label={item.name}
                               onClick={() => handleSelect(item.id, item.rol_name)}
+                              clickable
+                              variant={isSelected ? 'filled' : 'outlined'}
+                              sx={{
+                                borderRadius: '20px',
+                                px: 1.5,
+                                py: 0.5,
+                                fontSize: '0.85rem',
+                                fontWeight: 500,
+                                borderColor: roleColor,
+                                backgroundColor: isSelected ? roleColor : 'transparent',
+                                color: isSelected ? '#5c5a5aff' : '#696767ff',
+                                '&:hover': {
+                                  backgroundColor: isSelected ? roleColor : `${roleColor}20`
+                                }
+                              }}
+                            />
+                          )
+                        })}
+                      </Box>
+                    </Paper>
+                  )
+                })} */}
+
+                {Object.keys(groupedDataRoleWise).map(roleKey => {
+                  const items = groupedDataRoleWise[roleKey]
+                  if (!items || items.length === 0) return null
+
+                  const roleLower = toKey(roleKey)
+                  const roleColor = roleChipColors[roleLower] || '#1f5634'
+
+                  return (
+                    <Paper key={roleKey} elevation={2} sx={{ p: 3 }}>
+                      <Typography
+                        variant='subtitle1'
+                        sx={{
+                          mb: 2,
+                          fontWeight: 700,
+                          color: 'text.primary',
+                          borderBottom: '2px solid #bfc4c1ff',
+                          display: 'inline-block',
+                          pb: 0.5,
+                          textTransform: 'uppercase',
+                          letterSpacing: 0.5
+                        }}
+                      >
+                        {roleKey}
+                      </Typography>
+
+                      <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1.5 }}>
+                        {items.map((item: any) => {
+                          const chipRole = item?.rol_name ?? roleKey
+
+                          // ✅ selected purely from current state -> click toggles off too
+                          const isSelected = filterWishSelectedLabelsDataLack?.some(
+                            (x: any) => x.id === item.id && sameKey(x.role, chipRole)
+                          )
+
+                          return (
+                            <Chip
+                              key={`${chipRole}-${item.id}`}
+                              label={item.name}
+                              onClick={() => handleSelect(item.id, chipRole)}
                               clickable
                               variant={isSelected ? 'filled' : 'outlined'}
                               sx={{

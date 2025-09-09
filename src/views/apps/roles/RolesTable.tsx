@@ -3,7 +3,17 @@
 import '@tanstack/table-core'
 import { useState, useMemo, useEffect, useRef } from 'react'
 import { useParams, useRouter, useSearchParams } from 'next/navigation'
-import { Card, CardContent, Button, TextField, Typography, IconButton, TablePagination, Skeleton } from '@mui/material'
+import {
+  Card,
+  CardContent,
+  Button,
+  TextField,
+  Typography,
+  IconButton,
+  TablePagination,
+  Skeleton,
+  Tooltip
+} from '@mui/material'
 import { styled } from '@mui/material/styles'
 import type { TextFieldProps } from '@mui/material/TextField'
 import classnames from 'classnames'
@@ -89,40 +99,40 @@ const DebouncedInput = ({
   debounce = 500,
   ...props
 }: {
-  value: string | number;
-  onEnter: (value: string | number) => void;
-  debounce?: number;
+  value: string | number
+  onEnter: (value: string | number) => void
+  debounce?: number
 } & Omit<TextFieldProps, 'onChange'>) => {
-  const [value, setValue] = useState(initialValue);
+  const [value, setValue] = useState(initialValue)
 
   useEffect(() => {
-    setValue(initialValue);
-  }, [initialValue]);
+    setValue(initialValue)
+  }, [initialValue])
 
   // Debounce for empty value case
   useEffect(() => {
     if (String(value).trim() === '') {
       const timeout = setTimeout(() => {
-        onEnter(value); // Call API when input cleared
-      }, debounce);
-      return () => clearTimeout(timeout);
+        onEnter(value) // Call API when input cleared
+      }, debounce)
+      return () => clearTimeout(timeout)
     }
-  }, [value, debounce, onEnter]);
+  }, [value, debounce, onEnter])
 
   return (
     <TextField
       {...props}
       value={value}
-      onChange={(e) => setValue(e.target.value)}
-      onKeyDown={(e) => {
+      onChange={e => setValue(e.target.value)}
+      onKeyDown={e => {
         if (e.key === 'Enter') {
-          onEnter(value); // Only run API call on Enter
+          onEnter(value) // Only run API call on Enter
         }
       }}
-      size="small"
+      size='small'
     />
-  );
-};
+  )
+}
 
 const columnHelper = createColumnHelper<UsersTypeWithAction>()
 
@@ -259,32 +269,36 @@ const RolesTable = () => {
           <div className='flex items-center gap-0.5'>
             {console.log('row.original', row)}
             {showEditRoleButton && (
-              <IconButton
-                size='small'
-                disabled={['Super Admin', 'default', 'Default'].includes(row.original.title)}
-                onClick={() => {
-                  localStorage.setItem('editRoleData', JSON.stringify(row.original))
-                  const redirectURL =
-                    searchParams.get('redirectTo') ??
-                    `/apps/roles/add-role?role_id=${encodeURIComponent(row.original.id)}`
-                  router.replace(getLocalizedUrl(redirectURL, locale as Locale))
-                }}
-              >
-                <i className='ri-edit-box-line text-textSecondary' />
-              </IconButton>
+              <Tooltip title='Edit'>
+                <IconButton
+                  size='small'
+                  disabled={['Super Admin', 'default', 'Default'].includes(row.original.title)}
+                  onClick={() => {
+                    localStorage.setItem('editRoleData', JSON.stringify(row.original))
+                    const redirectURL =
+                      searchParams.get('redirectTo') ??
+                      `/apps/roles/add-role?role_id=${encodeURIComponent(row.original.id)}`
+                    router.replace(getLocalizedUrl(redirectURL, locale as Locale))
+                  }}
+                >
+                  <i className='ri-edit-box-line text-textSecondary' />
+                </IconButton>
+              </Tooltip>
             )}
 
             {showDeleteRoleButton && (
-              <IconButton
-                size='small'
-                disabled={['super admin', 'default'].includes(row.original.title?.toLowerCase())}
-                onClick={() => {
-                  setDeleteOpen(true)
-                  handleOpenDeleteDialog(row.original.id, 0)
-                }}
-              >
-                <i className='ri-delete-bin-7-line text-textSecondary' />
-              </IconButton>
+              <Tooltip title='Delete'>
+                <IconButton
+                  size='small'
+                  disabled={['super admin', 'default'].includes(row.original.title?.toLowerCase())}
+                  onClick={() => {
+                    setDeleteOpen(true)
+                    handleOpenDeleteDialog(row.original.id, 0)
+                  }}
+                >
+                  <i className='ri-delete-bin-7-line text-textSecondary' />
+                </IconButton>
+              </Tooltip>
             )}
           </div>
         )

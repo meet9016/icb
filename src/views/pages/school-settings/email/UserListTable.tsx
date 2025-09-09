@@ -260,8 +260,8 @@ const UserListTable = ({ tableData }: { tableData?: UsersType[] }) => {
         country: 'N/A',
         currentPlan: 'enterprise'
       }))
-      setTotalRows(response.data) // get total from API if exists
-      setData(users)
+      // setTotalRows(response.data) // get total from API if exists
+      // setData(users)
 
     } catch (err: any) {
       return null

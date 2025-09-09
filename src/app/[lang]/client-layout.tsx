@@ -39,55 +39,6 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
     setHostname(host.split('.')[0])
   }, [])
 
-  const getAdminData = async () => {
-    try {
-      // setLoading(true);
-      // const formData = new FormData();
-      // const data = response.data.data;
-      //   const response = await axios.post('https://masteradmin.icbapp.site/api',formData)
-      // console.log("Response from API:", response);
-      // const adminData: AdminData = {
-      // d_logo: "https://petrolpe.com/uploads/myschool/logo/dark_1750770795_light_1749633297_Group_2.png000000",
-      // f_logo: "https://petrolpe.com/uploads/myschool/logo/favicon_1750770626_favicon_1750091713_685047b488bcf_download.jpg",
-      // l_logo: "https://petrolpe.com/uploads/myschool/logo/dark_1750770795_light_1749633297_Group_2.png",
-      // background_image: "https://petrolpe.com/uploads//background.png",
-      // primary_color: '#433d3d',
-      // secondary_color: '#000000',
-      // accent_color: '#000000',
-      // tenant_id: 'myschool',
-      // school_id: 11,
-      // name: 'My School',
-      // username: 'myschool',
-      // domain: 'myschool.icbapp',
-      // id: ''
-      // };
-      // if (response.data.success) {
-      // dispatch(setAdminInfo(data))
-      // setAdminData({
-      //     name: adminStore?.name || '',
-      //     favicon: adminStore?.f_logo || '/favicon.ico'
-      // })
-      // } else {
-      //     setAdminData({ name: '', favicon: '/favicon.ico' })
-      //     router.replace(getLocalizedUrl("/login", locale as Locale))
-      // }
-    } catch (err) {
-      dispatch(resetAdminInfo())
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  // useEffect(() => {
-  //     if (!hostname) return;
-
-  //     getAdminData();
-  // }, [hostname]);
-
-  useEffect(() => {
-    getAdminData()
-  }, [])
-
   useEffect(() => {
     if (!adminStore.name && !adminStore.f_logo) return
 

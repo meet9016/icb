@@ -29,6 +29,7 @@ import { toast } from 'react-toastify'
 import ReactTable from '@/comman/table/ReactTable'
 import { createColumnHelper } from '@tanstack/react-table'
 import { ColumnDef } from '@tanstack/table-core'
+import dayjs from 'dayjs'
 
 type CampaignDialogProps = {
   open: boolean
@@ -37,6 +38,8 @@ type CampaignDialogProps = {
   viewLogData: any
   setViewEmailLog: any
   viewNotificationLog: any
+  viewWhatsappLog: any
+  viewSmsLog: any
 
   totalRowsNotification: any
   paginationEmail: any
@@ -52,7 +55,12 @@ type CampaignDialogProps = {
 
   loaderEmailView: boolean
   loaderNotifiView?: boolean
+  loaderWpView?: boolean
   loaderSmsView?: boolean
+
+  totalRowsWhatsapp: any
+  paginationWhatsapp: any
+  setPaginationWhatsapp: any
 }
 type ErrorType = {
   message: string[]
@@ -81,6 +89,12 @@ interface UsersTypeWithAction {
   action?: string
   hours?: string
   full_name?: string
+  sent_at?: string
+  opened_at?: string
+  scheduled_at?: string
+  error_message?: string
+  sid?: string
+  phone?: string
 }
 const columnHelper = createColumnHelper<UsersTypeWithAction>()
 
@@ -100,6 +114,8 @@ const CampaignViewLogDialog = ({
   setViewNotificationLog,
   viewLogData = [],
   viewNotificationLog = [],
+  viewWhatsappLog = [],
+  viewSmsLog = [],
 
   totalRowsEmail = 0,
   paginationEmail = {},
@@ -112,13 +128,16 @@ const CampaignViewLogDialog = ({
   totalRowsSms = 0,
   paginationSms = {},
   setPaginationSms = {},
+  
+  totalRowsWhatsapp = 0,
+  paginationWhatsapp = {},
+  setPaginationWhatsapp = {},
 
   loaderEmailView,
   loaderNotifiView,
-  loaderSmsView
+  loaderWpView,
+  loaderSmsView,
 }: CampaignDialogProps) => {
-  console.log('selectedChannel', selectedChannel)
-
   const [selectedCheckbox, setSelectedCheckbox] = useState<string[]>([])
   const [roleName, setRoleName] = useState<string>('')
   const [isIndeterminateCheckbox, setIsIndeterminateCheckbox] = useState<boolean>(false)
@@ -137,13 +156,13 @@ const CampaignViewLogDialog = ({
   const columns = useMemo<ColumnDef<UsersTypeWithAction, any>[]>(() => {
     if (selectedChannel === 'email') {
       return [
-        // columnHelper.accessor('hours', {
-        //   header: 'Name',
-        //   cell: ({ row }) => <Typography>{row.original.hours}</Typography>
-        // }),
+        columnHelper.accessor('full_name', {
+          header: 'Name',
+          cell: ({ row }) => <Typography>{row.original.full_name}</Typography>
+        }),
         columnHelper.accessor('email', {
           header: 'Email',
-          cell: ({ row }) => <Typography>{row.original.email}</Typography>
+          cell: ({ row }) => <Typography>{row.original.email ?? '-'}</Typography>
         }),
         columnHelper.accessor('status', {
           header: 'Status',
@@ -173,22 +192,27 @@ const CampaignViewLogDialog = ({
             )
           }
         }),
-        columnHelper.accessor('sent_date', {
-          header: 'SentDate',
-          cell: ({ row }) => <Typography>{row.original.sent_date}</Typography>
+        columnHelper.accessor('scheduled_at', {
+          header: 'Scheduled At',
+          // cell: ({ row }) => <Typography>{row.original.scheduled_at ?? '-'}</Typography>
+          cell: ({ row }) => {
+            const raw = row.original.scheduled_at
+            const formatted = raw ? dayjs(raw).format('YYYY-MM-DD HH:mm') : '-'
+            return <Typography>{formatted}</Typography>
+          }
         }),
+        // columnHelper.accessor('sent_time', {
+        //   header: 'SentTime',
+        //   cell: ({ row }) => <Typography>{row.original.sent_time ?? '-'}</Typography>
+        // }),
         columnHelper.accessor('sent_time', {
-          header: 'SentTime',
-          cell: ({ row }) => <Typography>{row.original.sent_time}</Typography>
-        }),
-        columnHelper.accessor('delivered_time', {
-          header: 'delivered Time'
-          // cell: ({ row }) => <Typography>{row.original.hours}</Typography>
-        }),
-        columnHelper.accessor('read_time', {
-          header: 'Read Time'
-          // cell: ({ row }) => <Typography>{row.original.hours}</Typography>
+          header: 'delivered Time',
+          cell: ({ row }) => <Typography>{row.original.sent_time ?? '-'}</Typography>
         })
+        // columnHelper.accessor('opened_at', {
+        //   header: 'Read Time',
+        //   cell: ({ row }) => <Typography>{row.original.opened_at}</Typography>
+        // })
         // columnHelper.accessor('action', {
         //   header: 'Action',
         //   cell: ({ row }) => (
@@ -206,21 +230,26 @@ const CampaignViewLogDialog = ({
       ]
     } else if (selectedChannel === 'sms') {
       return [
-        columnHelper.accessor('full_name', {
+        columnHelper.accessor('name', {
           header: 'Name',
-          cell: ({ row }) => <Typography>{row.original.full_name}</Typography>
+          cell: ({ row }) => <Typography>{row.original.name ?? '-'}</Typography>
         }),
-        columnHelper.accessor('hours', {
-          header: 'Phone',
-          cell: ({ row }) => <Typography>{row.original.hours}</Typography>
+        columnHelper.accessor('sid', {
+          header: 'Send Id',
+          cell: ({ row }) => <Typography>{row.original.sid ?? '-'}</Typography>
         }),
-        columnHelper.accessor('hours', {
+        columnHelper.accessor('error_message', {
           header: 'Message',
-          cell: ({ row }) => <Typography>{row.original.hours}</Typography>
+          cell: ({ row }) => <Typography>{row.original.error_message ?? '-'}</Typography>
         }),
-        columnHelper.accessor('sent_time', {
+        columnHelper.accessor('sent_at', {
           header: 'SentTime',
-          cell: ({ row }) => <Typography>{row.original.sent_time}</Typography>
+          // cell: ({ row }) => <Typography>{row.original.sent_at ?? '-'}</Typography>
+          cell: ({ row }) => {
+            const raw = row.original.sent_at
+            const formatted = raw ? dayjs(raw).format('YYYY-MM-DD HH:mm') : '-'
+            return <Typography>{formatted}</Typography>
+          }
         }),
         columnHelper.accessor('status', {
           header: 'Status',
@@ -257,21 +286,30 @@ const CampaignViewLogDialog = ({
       ]
     } else if (selectedChannel === 'push_notification') {
       return [
-        columnHelper.accessor('full_name', {
+        columnHelper.accessor('name', {
           header: 'Name',
-          cell: ({ row }) => <Typography>{row.original.full_name}</Typography>
+          cell: ({ row }) => <Typography>{row.original.name ?? '-'}</Typography>
         }),
         // columnHelper.accessor('hours', {
         //   header: 'Phone',
         //   cell: ({ row }) => <Typography>{row.original.hours}</Typography>
         // }),
-        columnHelper.accessor('hours', {
-          header: 'Message',
-          cell: ({ row }) => <Typography>{row.original.hours}</Typography>
+        // columnHelper.accessor('hours', {
+        //   header: 'Message',
+        //   cell: ({ row }) => <Typography>{row.original.hours}</Typography>
+        // }),
+        columnHelper.accessor('scheduled_at', {
+          header: 'Scheduled Time',
+          // cell: ({ row }) => <Typography>{row.original.scheduled_at ?? '-'}</Typography>
+          cell: ({ row }) => {
+            const raw = row.original.scheduled_at
+            const formatted = raw ? dayjs(raw).format('YYYY-MM-DD HH:mm') : '-'
+            return <Typography>{formatted}</Typography>
+          }
         }),
-        columnHelper.accessor('sent_time', {
-          header: 'SentTime',
-          cell: ({ row }) => <Typography>{row.original.sent_time}</Typography>
+        columnHelper.accessor('sent_at', {
+          header: 'Sent',
+          cell: ({ row }) => <Typography>{row.original.sent_at ?? '-'}</Typography>
         }),
         columnHelper.accessor('status', {
           header: 'Status',
@@ -308,33 +346,62 @@ const CampaignViewLogDialog = ({
       ]
     } else {
       return [
-        columnHelper.accessor('hours', {
+        columnHelper.accessor('full_name', {
           header: 'Name',
-          cell: ({ row }) => <Typography>{row.original.hours}</Typography>
+          cell: ({ row }) => <Typography>{row.original.full_name}</Typography>
         }),
-        columnHelper.accessor('hours', {
+        columnHelper.accessor('phone', {
           header: 'Phone',
-          cell: ({ row }) => <Typography>{row.original.hours}</Typography>
+          cell: ({ row }) => <Typography>{row.original.phone ?? '-'}</Typography>
         }),
-        columnHelper.accessor('hours', {
-          header: 'Message Preview',
-          cell: ({ row }) => <Typography>{row.original.hours}</Typography>
+        // columnHelper.accessor('hours', {
+        //   header: 'Message Preview',
+        //   cell: ({ row }) => <Typography>{row.original.hours}</Typography>
+        // }),
+        // columnHelper.accessor('hours', {
+        //   header: 'Attachments',
+        //   cell: ({ row }) => <Typography>{row.original.hours}</Typography>
+        // }),
+        columnHelper.accessor('scheduled_at', {
+          header: 'Scheduled At',
+          // cell: ({ row }) => <Typography>{row.original.scheduled_at ?? '-'}</Typography>
+          cell: ({ row }) => {
+            const raw = row.original.scheduled_at
+            const formatted = raw ? dayjs(raw).format('YYYY-MM-DD HH:mm') : '-'
+            return <Typography>{formatted}</Typography>
+          }
         }),
-        columnHelper.accessor('hours', {
-          header: 'Attachments',
-          cell: ({ row }) => <Typography>{row.original.hours}</Typography>
-        }),
-        columnHelper.accessor('hours', {
-          header: 'SentTime',
-          cell: ({ row }) => <Typography>{row.original.hours}</Typography>
-        }),
-        columnHelper.accessor('hours', {
+        columnHelper.accessor('status', {
           header: 'Status',
-          cell: ({ row }) => <Typography>{row.original.hours}</Typography>
+          cell: ({ row }) => {
+            const status = String(row.original.status || '').toLowerCase()
+
+            const statusMap: Record<StatusType, StatusInfo> = {
+              queued: { icon: 'ri-time-line', color: 'text-yellow-500', label: 'Queued' },
+              sending: { icon: 'ri-send-plane-line', color: 'text-blue-500', label: 'Send' },
+              failed: { icon: 'ri-close-circle-line', color: 'text-red-500', label: 'Failed' },
+              open: { icon: 'ri-mail-open-line', color: 'text-green-500', label: 'Opened' }
+            }
+
+            const { icon, color, label } =
+              status in statusMap
+                ? statusMap[status as StatusType]
+                : { icon: 'ri-question-line', color: 'text-gray-500', label: row.original.status || 'Unknown' }
+
+            return (
+              <div className='flex items-center gap-2'>
+                <Tooltip title={row.original.status}>
+                  <span className={`flex items-center justify-center w-7 h-7 rounded-full bg-gray-100 ${color}`}>
+                    <i className={`${icon} text-lg`} />
+                  </span>
+                </Tooltip>
+              </div>
+            )
+          }
         }),
         columnHelper.accessor('hours', {
           header: 'Read Time',
-          cell: ({ row }) => <Typography>{row.original.hours}</Typography>
+          cell: ({ row }) => <Typography>{row.original.hours ?? '-'}</Typography>
         }),
         columnHelper.accessor('hours', {
           header: 'Delivered Time',
@@ -404,6 +471,43 @@ const CampaignViewLogDialog = ({
     sms: 'SMS'
   }
 
+  // Derive everything strictly from selectedChannel
+  const channelConfig = {
+    email: {
+      data: viewLogData?.data ?? [],
+      count: totalRowsEmail,
+      pagination: paginationEmail,
+      setPagination: setPaginationEmail
+    },
+    push_notification: {
+      data: viewNotificationLog?.data ?? [],
+      count: totalRowsNotification,
+      pagination: paginationNotification,
+      setPagination: setPaginationNotification
+    },
+    wp: {
+      data: viewWhatsappLog?.data ?? [],
+      count: totalRowsWhatsapp,
+      pagination: paginationWhatsapp,
+      setPagination: setPaginationWhatsapp
+    },
+    sms: {
+      data: viewSmsLog?.data ?? [], // if you have SMS logs; else []
+      count: totalRowsSms,
+      pagination: paginationSms,
+      setPagination: setPaginationSms
+    }
+  } as const
+
+  const { data, count, pagination, setPagination } =
+    channelConfig[selectedChannel as keyof typeof channelConfig] ?? channelConfig.email
+
+  // Optional: reset page to 0 whenever channel changes
+  useEffect(() => {
+    setPagination((prev: any) => ({ ...prev, page: 0 }))
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedChannel])
+
   return (
     <Dialog
       fullWidth
@@ -414,7 +518,7 @@ const CampaignViewLogDialog = ({
       sx={{ '& .MuiDialog-paper': { width: '100%', maxWidth: '1200px' } }}
     >
       {/* {loading && <Loader />} */}
-      {(loaderEmailView || loaderNotifiView || loaderSmsView) && (
+      {(loaderEmailView || loaderNotifiView || loaderSmsView || loaderWpView) && (
         <div className='absolute inset-0 flex items-center justify-center bg-white/60 z-50'>
           <div className='w-10 h-10 border-4 border-gray-300 border-t-blue-600 rounded-full animate-spin'></div>
         </div>
@@ -446,52 +550,17 @@ const CampaignViewLogDialog = ({
           </IconButton>
           <div className='flex flex-col overflow-x-auto'>
             <ReactTable
-              data={
-                viewLogData?.data?.length > 0
-                  ? viewLogData?.data
-                  : viewNotificationLog?.data?.length > 0
-                    ? viewNotificationLog?.data
-                    : []
-              }
+              key={`${selectedChannel}-${pagination.perPage}`} // force internal reset on channel/size change
+              data={data}
               columns={columns}
-              count={
-                selectedChannel === 'email'
-                  ? totalRowsEmail
-                  : selectedChannel === 'push_notification'
-                    ? totalRowsNotification
-                    : totalRowsSms
-              }
-              page={
-                selectedChannel === 'email'
-                  ? paginationEmail.page
-                  : selectedChannel === 'push_notification'
-                    ? paginationNotification.page
-                    : paginationSms.page
-              }
-              rowsPerPage={
-                selectedChannel === 'email'
-                  ? paginationEmail.perPage
-                  : selectedChannel === 'push_notification'
-                    ? paginationNotification.perPage
-                    : paginationSms.perPage
-              }
+              count={count ?? 0}
+              page={pagination.page ?? 0} // ensure 0-based for UI
+              rowsPerPage={pagination.perPage ?? 10}
               onPageChange={(_, newPage) => {
-                if (selectedChannel === 'email') {
-                  setPaginationEmail((prev: any) => ({ ...prev, page: newPage }))
-                } else if (selectedChannel === 'push_notification') {
-                  setPaginationNotification((prev: any) => ({ ...prev, page: newPage }))
-                } else {
-                  setPaginationSms((prev: any) => ({ ...prev, page: newPage }))
-                }
+                setPagination((prev: any) => ({ ...prev, page: newPage }))
               }}
               onRowsPerPageChange={newSize => {
-                if (selectedChannel === 'email') {
-                  setPaginationEmail({ page: 0, perPage: newSize })
-                } else if (selectedChannel === 'push_notification') {
-                  setPaginationNotification({ page: 0, perPage: newSize })
-                } else {
-                  setPaginationSms({ page: 0, perPage: newSize })
-                }
+                setPagination({ page: 0, perPage: newSize })
               }}
             />
           </div>

@@ -15,7 +15,7 @@ const Security = () => {
         <ChangePasswordCard />
       </Grid>
       <Grid size={{ xs: 12 }}>
-        <TwoFactorAuthenticationCard />
+        {/* <TwoFactorAuthenticationCard /> */}
       </Grid>
       {/* <Grid size={{ xs: 12 }}>
         <CreateApiKey />
