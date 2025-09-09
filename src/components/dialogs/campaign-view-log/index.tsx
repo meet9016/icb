@@ -17,7 +17,8 @@ import {
   DialogActions,
   Button,
   LinearProgress,
-  Tooltip
+  Tooltip,
+  TextFieldProps
 } from '@mui/material'
 
 import type { RoleType } from '@/types/apps/roleType'
@@ -61,6 +62,12 @@ type CampaignDialogProps = {
   totalRowsWhatsapp: any
   paginationWhatsapp: any
   setPaginationWhatsapp: any
+
+  setGlobalFilter: any
+  globalFilter: any
+
+  getNotificationViewLog: any
+  getWhatsappViewLog: any
 }
 type ErrorType = {
   message: string[]
@@ -95,10 +102,11 @@ interface UsersTypeWithAction {
   error_message?: string
   sid?: string
   phone?: string
+  user_phone?: string
 }
 const columnHelper = createColumnHelper<UsersTypeWithAction>()
 
-type StatusType = 'queued' | 'sending' | 'failed' | 'open'
+type StatusType = 'queued' | 'sending' | 'failed' | 'Opened'
 
 type StatusInfo = {
   icon: string
@@ -128,7 +136,7 @@ const CampaignViewLogDialog = ({
   totalRowsSms = 0,
   paginationSms = {},
   setPaginationSms = {},
-  
+
   totalRowsWhatsapp = 0,
   paginationWhatsapp = {},
   setPaginationWhatsapp = {},
@@ -137,6 +145,12 @@ const CampaignViewLogDialog = ({
   loaderNotifiView,
   loaderWpView,
   loaderSmsView,
+
+  setGlobalFilterLog,
+  globalFilterLog,
+
+  getNotificationViewLog,
+  getWhatsappViewLog
 }: CampaignDialogProps) => {
   const [selectedCheckbox, setSelectedCheckbox] = useState<string[]>([])
   const [roleName, setRoleName] = useState<string>('')
@@ -152,6 +166,47 @@ const CampaignViewLogDialog = ({
   const router = useRouter()
   const { lang: locale } = useParams()
 
+  const DebouncedInput = ({
+    value: initialValue,
+    onEnter,
+    debounce = 500,
+    ...props
+  }: {
+    value: string | number
+    onEnter: (value: string | number) => void
+    debounce?: number
+  } & Omit<TextFieldProps, 'onChange'>) => {
+    const [value, setValue] = useState(initialValue)
+
+    useEffect(() => {
+      setValue(initialValue)
+    }, [initialValue])
+
+    // Debounce for empty value case
+    useEffect(() => {
+      if (String(value).trim() === '') {
+        const timeout = setTimeout(() => {
+          onEnter(value) // Call API when input cleared
+        }, debounce)
+        return () => clearTimeout(timeout)
+      }
+    }, [value, debounce, onEnter])
+
+    return (
+      <TextField
+        {...props}
+        value={value}
+        onChange={e => setValue(e.target.value)}
+        onKeyDown={e => {
+          if (e.key === 'Enter') {
+            onEnter(value) // Only run API call on Enter
+          }
+        }}
+        size='small'
+      />
+    )
+  }
+
   // Hooks
   const columns = useMemo<ColumnDef<UsersTypeWithAction, any>[]>(() => {
     if (selectedChannel === 'email') {
@@ -164,26 +219,54 @@ const CampaignViewLogDialog = ({
           header: 'Email',
           cell: ({ row }) => <Typography>{row.original.email ?? '-'}</Typography>
         }),
+        columnHelper.accessor('scheduled_at', {
+          header: 'Scheduled Date',
+          cell: ({ row }) => {
+            const raw = row.original.scheduled_at
+            const formatted = raw ? dayjs(raw).format('YYYY-MM-DD') : '-'
+            return <Typography>{formatted}</Typography>
+          }
+        }),
+        columnHelper.accessor('scheduled_at', {
+          header: 'Scheduled time',
+          cell: ({ row }) => {
+            const raw = row.original.scheduled_at
+            const formatted = raw ? dayjs(raw).format('HH:mm') : '-'
+            return <Typography>{formatted}</Typography>
+          }
+        }),
+        columnHelper.accessor('sent_date', {
+          header: 'delivered Date',
+          cell: ({ row }) => <Typography>{row.original.sent_time ? row.original.sent_date : '-'}</Typography>
+        }),
+        columnHelper.accessor('sent_time', {
+          header: 'delivered Time',
+          cell: ({ row }) => (
+            <Typography>{row.original.sent_time ? row.original.sent_time.slice(0, 5) : '-'}</Typography>
+          )
+        }),
         columnHelper.accessor('status', {
           header: 'Status',
           cell: ({ row }) => {
             const status = String(row.original.status || '').toLowerCase()
 
-            const statusMap: Record<StatusType, StatusInfo> = {
+            const statusMap: Record<string, StatusInfo> = {
               queued: { icon: 'ri-time-line', color: 'text-yellow-500', label: 'Queued' },
               sending: { icon: 'ri-send-plane-line', color: 'text-blue-500', label: 'Send' },
               failed: { icon: 'ri-close-circle-line', color: 'text-red-500', label: 'Failed' },
-              open: { icon: 'ri-mail-open-line', color: 'text-green-500', label: 'Opened' }
+              opened: { icon: 'ri-mail-open-line', color: 'text-green-500', label: 'Opened' } // 🔽 lowercase key
             }
 
             const { icon, color, label } =
               status in statusMap
-                ? statusMap[status as StatusType]
+                ? statusMap[status]
                 : { icon: 'ri-question-line', color: 'text-gray-500', label: row.original.status || 'Unknown' }
 
+            const tooltipTitle =
+              status === 'failed' ? row.original.error_message || 'Failed' : row.original.status || 'Unknown'
             return (
               <div className='flex items-center gap-2'>
-                <Tooltip title={row.original.status}>
+                <Tooltip title={tooltipTitle}>
                   <span className={`flex items-center justify-center w-7 h-7 rounded-full bg-gray-100 ${color}`}>
                     <i className={`${icon} text-lg`} />
                   </span>
@@ -191,42 +274,7 @@ const CampaignViewLogDialog = ({
               </div>
             )
           }
-        }),
-        columnHelper.accessor('scheduled_at', {
-          header: 'Scheduled At',
-          // cell: ({ row }) => <Typography>{row.original.scheduled_at ?? '-'}</Typography>
-          cell: ({ row }) => {
-            const raw = row.original.scheduled_at
-            const formatted = raw ? dayjs(raw).format('YYYY-MM-DD HH:mm') : '-'
-            return <Typography>{formatted}</Typography>
-          }
-        }),
-        // columnHelper.accessor('sent_time', {
-        //   header: 'SentTime',
-        //   cell: ({ row }) => <Typography>{row.original.sent_time ?? '-'}</Typography>
-        // }),
-        columnHelper.accessor('sent_time', {
-          header: 'delivered Time',
-          cell: ({ row }) => <Typography>{row.original.sent_time ?? '-'}</Typography>
         })
-        // columnHelper.accessor('opened_at', {
-        //   header: 'Read Time',
-        //   cell: ({ row }) => <Typography>{row.original.opened_at}</Typography>
-        // })
-        // columnHelper.accessor('action', {
-        //   header: 'Action',
-        //   cell: ({ row }) => (
-        //     <div className='flex items-center'>
-        //       <>
-        //         <Tooltip title='Delete'>
-        //           <IconButton size='small'>
-        //             <i className='ri-delete-bin-7-line text-red-600' />
-        //           </IconButton>
-        //         </Tooltip>
-        //       </>
-        //     </div>
-        //   )
-        // })
       ]
     } else if (selectedChannel === 'sms') {
       return [
@@ -234,20 +282,41 @@ const CampaignViewLogDialog = ({
           header: 'Name',
           cell: ({ row }) => <Typography>{row.original.name ?? '-'}</Typography>
         }),
-        columnHelper.accessor('sid', {
-          header: 'Send Id',
-          cell: ({ row }) => <Typography>{row.original.sid ?? '-'}</Typography>
+        columnHelper.accessor('user_phone', {
+          header: 'phone',
+          cell: ({ row }) => <Typography>{row.original.user_phone ?? '-'}</Typography>
         }),
-        columnHelper.accessor('error_message', {
-          header: 'Message',
-          cell: ({ row }) => <Typography>{row.original.error_message ?? '-'}</Typography>
-        }),
-        columnHelper.accessor('sent_at', {
-          header: 'SentTime',
+        columnHelper.accessor('scheduled_at', {
+          header: 'Scheduled Date',
           // cell: ({ row }) => <Typography>{row.original.sent_at ?? '-'}</Typography>
           cell: ({ row }) => {
+            const raw = row.original.scheduled_at
+            const formatted = raw ? dayjs(raw).format('YYYY-MM-DD') : '-'
+            return <Typography>{formatted}</Typography>
+          }
+        }),
+        columnHelper.accessor('scheduled_at', {
+          header: 'Scheduled time',
+          // cell: ({ row }) => <Typography>{row.original.sent_at ?? '-'}</Typography>
+          cell: ({ row }) => {
+            const raw = row.original.scheduled_at
+            const formatted = raw ? dayjs(raw).format('HH:mm') : '-'
+            return <Typography>{formatted}</Typography>
+          }
+        }),
+        columnHelper.accessor('sent_at', {
+          header: 'SendDate',
+          cell: ({ row }) => {
             const raw = row.original.sent_at
-            const formatted = raw ? dayjs(raw).format('YYYY-MM-DD HH:mm') : '-'
+            const formatted = raw ? dayjs(raw).format('YYYY-MM-DD') : '-'
+            return <Typography>{formatted}</Typography>
+          }
+        }),
+        columnHelper.accessor('sent_at', {
+          header: 'SendTime',
+          cell: ({ row }) => {
+            const raw = row.original.sent_at
+            const formatted = raw ? dayjs(raw).format('HH:mm') : '-'
             return <Typography>{formatted}</Typography>
           }
         }),
@@ -260,17 +329,18 @@ const CampaignViewLogDialog = ({
               queued: { icon: 'ri-time-line', color: 'text-yellow-500', label: 'Queued' },
               sending: { icon: 'ri-send-plane-line', color: 'text-blue-500', label: 'Send' },
               failed: { icon: 'ri-close-circle-line', color: 'text-red-500', label: 'Failed' },
-              open: { icon: 'ri-mail-open-line', color: 'text-green-500', label: 'Opened' }
+              opened: { icon: 'ri-mail-open-line', color: 'text-green-500', label: 'Opened' }
             }
 
             const { icon, color, label } =
               status in statusMap
                 ? statusMap[status as StatusType]
                 : { icon: 'ri-question-line', color: 'text-gray-500', label: row.original.status || 'Unknown' }
-
+            const tooltipTitle =
+              status === 'failed' ? row.original.error_message || 'Failed' : row.original.status || 'Unknown'
             return (
               <div className='flex items-center gap-2'>
-                <Tooltip title={row.original.status}>
+                <Tooltip title={tooltipTitle}>
                   <span className={`flex items-center justify-center w-7 h-7 rounded-full bg-gray-100 ${color}`}>
                     <i className={`${icon} text-lg`} />
                   </span>
@@ -278,11 +348,11 @@ const CampaignViewLogDialog = ({
               </div>
             )
           }
-        }),
-        columnHelper.accessor('hours', {
-          header: 'delivered Time',
-          cell: ({ row }) => <Typography>{row.original.hours}</Typography>
         })
+        // columnHelper.accessor('hours', {
+        //   header: 'delivered Time',
+        //   cell: ({ row }) => <Typography>{row.original.hours}</Typography>
+        // })
       ]
     } else if (selectedChannel === 'push_notification') {
       return [
@@ -290,47 +360,61 @@ const CampaignViewLogDialog = ({
           header: 'Name',
           cell: ({ row }) => <Typography>{row.original.name ?? '-'}</Typography>
         }),
-        // columnHelper.accessor('hours', {
-        //   header: 'Phone',
-        //   cell: ({ row }) => <Typography>{row.original.hours}</Typography>
-        // }),
-        // columnHelper.accessor('hours', {
-        //   header: 'Message',
-        //   cell: ({ row }) => <Typography>{row.original.hours}</Typography>
-        // }),
+        columnHelper.accessor('user_phone', {
+          header: 'phone',
+          cell: ({ row }) => <Typography>{row.original.user_phone ?? '-'}</Typography>
+        }),
+        columnHelper.accessor('scheduled_at', {
+          header: 'Scheduled Date',
+          // cell: ({ row }) => <Typography>{row.original.scheduled_at ?? '-'}</Typography>
+          cell: ({ row }) => {
+            const raw = row.original.scheduled_at
+            const formatted = raw ? dayjs(raw).format('YYYY-MM-DD') : '-'
+            return <Typography>{formatted}</Typography>
+          }
+        }),
         columnHelper.accessor('scheduled_at', {
           header: 'Scheduled Time',
           // cell: ({ row }) => <Typography>{row.original.scheduled_at ?? '-'}</Typography>
           cell: ({ row }) => {
             const raw = row.original.scheduled_at
-            const formatted = raw ? dayjs(raw).format('YYYY-MM-DD HH:mm') : '-'
+            const formatted = raw ? dayjs(raw).format('HH:mm') : '-'
             return <Typography>{formatted}</Typography>
           }
         }),
         columnHelper.accessor('sent_at', {
-          header: 'Sent',
+          header: 'Send',
           cell: ({ row }) => <Typography>{row.original.sent_at ?? '-'}</Typography>
         }),
         columnHelper.accessor('status', {
           header: 'Status',
           cell: ({ row }) => {
-            const status = String(row.original.status || '').toLowerCase()
+            console.log('row.original.status', row.original.status)
 
-            const statusMap: Record<StatusType, StatusInfo> = {
+            // main status info map
+            const statusMap: Record<string, StatusInfo> = {
               queued: { icon: 'ri-time-line', color: 'text-yellow-500', label: 'Queued' },
-              sending: { icon: 'ri-send-plane-line', color: 'text-blue-500', label: 'Sent' },
-              failed: { icon: 'ri-close-circle-line', color: 'text-red-500', label: 'Failed' },
-              open: { icon: 'ri-mail-open-line', color: 'text-green-500', label: 'Opened' }
+              sending: { icon: 'ri-send-plane-line', color: 'text-blue-500', label: 'Send' },
+              failed: { icon: 'ri-close-circle-line', color: 'text-red-500', label: 'Failed' }
             }
 
-            const { icon, color, label } =
-              status in statusMap
-                ? statusMap[status as StatusType]
-                : { icon: 'ri-question-line', color: 'text-gray-500', label: row.original.status || 'Unknown' }
+            const status = Number(row.original.status)
+            const statusKeyMap: Record<number, keyof typeof statusMap> = {
+              0: 'queued',
+              1: 'sending',
+              2: 'failed'
+            }
 
+            // get key from status number
+            const statusKey = statusKeyMap[status]
+
+            // pick values from statusMap safely
+            const { icon, color, label } = statusKey && statusMap[statusKey] ? statusMap[statusKey] : '-'
+            const tooltipTitle =
+              status === 'failed' ? row.original.error_message || 'Failed' : row.original.status || 'Unknown'
             return (
               <div className='flex items-center gap-2'>
-                <Tooltip title={row.original.status}>
+                <Tooltip title={tooltipTitle}>
                   <span className={`flex items-center justify-center w-7 h-7 rounded-full bg-gray-100 ${color}`}>
                     <i className={`${icon} text-lg`} />
                   </span>
@@ -338,11 +422,11 @@ const CampaignViewLogDialog = ({
               </div>
             )
           }
-        }),
-        columnHelper.accessor('hours', {
-          header: 'delivered Time',
-          cell: ({ row }) => <Typography>{row.original.hours}</Typography>
         })
+        // columnHelper.accessor('hours', {
+        //   header: 'delivered Time',
+        //   cell: ({ row }) => <Typography>{row.original.hours}</Typography>
+        // })
       ]
     } else {
       return [
@@ -354,20 +438,39 @@ const CampaignViewLogDialog = ({
           header: 'Phone',
           cell: ({ row }) => <Typography>{row.original.phone ?? '-'}</Typography>
         }),
-        // columnHelper.accessor('hours', {
-        //   header: 'Message Preview',
-        //   cell: ({ row }) => <Typography>{row.original.hours}</Typography>
-        // }),
-        // columnHelper.accessor('hours', {
-        //   header: 'Attachments',
-        //   cell: ({ row }) => <Typography>{row.original.hours}</Typography>
-        // }),
         columnHelper.accessor('scheduled_at', {
-          header: 'Scheduled At',
+          header: 'Scheduled Date',
           // cell: ({ row }) => <Typography>{row.original.scheduled_at ?? '-'}</Typography>
           cell: ({ row }) => {
             const raw = row.original.scheduled_at
-            const formatted = raw ? dayjs(raw).format('YYYY-MM-DD HH:mm') : '-'
+            const formatted = raw ? dayjs(raw).format('YYYY-MM-DD') : '-'
+            return <Typography>{formatted}</Typography>
+          }
+        }),
+        columnHelper.accessor('scheduled_at', {
+          header: 'Scheduled time',
+          // cell: ({ row }) => <Typography>{row.original.scheduled_at ?? '-'}</Typography>
+          cell: ({ row }) => {
+            const raw = row.original.scheduled_at
+            const formatted = raw ? dayjs(raw).format('HH:mm') : '-'
+            return <Typography>{formatted}</Typography>
+          }
+        }),
+        columnHelper.accessor('sent_date', {
+          header: 'Send Date',
+          // cell: ({ row }) => <Typography>{row.original.scheduled_at ?? '-'}</Typography>
+          cell: ({ row }) => {
+            const raw = row.original.sent_date
+            const formatted = raw ? dayjs(raw).format('YYYY-MM-DD') : '-'
+            return <Typography>{formatted}</Typography>
+          }
+        }),
+        columnHelper.accessor('sent_time', {
+          header: 'Send time',
+          // cell: ({ row }) => <Typography>{row.original.scheduled_at ?? '-'}</Typography>
+          cell: ({ row }) => {
+            const raw = row.original.sent_time
+            const formatted = raw ? dayjs(raw).format('HH:mm') : '-'
             return <Typography>{formatted}</Typography>
           }
         }),
@@ -380,7 +483,7 @@ const CampaignViewLogDialog = ({
               queued: { icon: 'ri-time-line', color: 'text-yellow-500', label: 'Queued' },
               sending: { icon: 'ri-send-plane-line', color: 'text-blue-500', label: 'Send' },
               failed: { icon: 'ri-close-circle-line', color: 'text-red-500', label: 'Failed' },
-              open: { icon: 'ri-mail-open-line', color: 'text-green-500', label: 'Opened' }
+              opened: { icon: 'ri-mail-open-line', color: 'text-green-500', label: 'Opened' }
             }
 
             const { icon, color, label } =
@@ -388,9 +491,11 @@ const CampaignViewLogDialog = ({
                 ? statusMap[status as StatusType]
                 : { icon: 'ri-question-line', color: 'text-gray-500', label: row.original.status || 'Unknown' }
 
+            const tooltipTitle =
+              status === 'failed' ? row.original.error_message || 'Failed' : row.original.status || 'Unknown'
             return (
               <div className='flex items-center gap-2'>
-                <Tooltip title={row.original.status}>
+                <Tooltip title={tooltipTitle}>
                   <span className={`flex items-center justify-center w-7 h-7 rounded-full bg-gray-100 ${color}`}>
                     <i className={`${icon} text-lg`} />
                   </span>
@@ -398,15 +503,15 @@ const CampaignViewLogDialog = ({
               </div>
             )
           }
-        }),
-        columnHelper.accessor('hours', {
-          header: 'Read Time',
-          cell: ({ row }) => <Typography>{row.original.hours ?? '-'}</Typography>
-        }),
-        columnHelper.accessor('hours', {
-          header: 'Delivered Time',
-          cell: ({ row }) => <Typography>{row.original.hours}</Typography>
         })
+        // columnHelper.accessor('hours', {
+        //   header: 'Read Time',
+        //   cell: ({ row }) => <Typography>{row.original.hours ?? '-'}</Typography>
+        // }),
+        // columnHelper.accessor('hours', {
+        //   header: 'Delivered Time',
+        //   cell: ({ row }) => <Typography>{row.original.hours}</Typography>
+        // })
       ]
     }
   }, [selectedChannel])
@@ -471,29 +576,28 @@ const CampaignViewLogDialog = ({
     sms: 'SMS'
   }
 
-  // Derive everything strictly from selectedChannel
   const channelConfig = {
     email: {
       data: viewLogData?.data ?? [],
-      count: totalRowsEmail,
+      count: viewLogData?.total ?? totalRowsEmail ?? 0,
       pagination: paginationEmail,
       setPagination: setPaginationEmail
     },
     push_notification: {
       data: viewNotificationLog?.data ?? [],
-      count: totalRowsNotification,
+      count: viewNotificationLog?.total ?? totalRowsNotification ?? 0,
       pagination: paginationNotification,
       setPagination: setPaginationNotification
     },
     wp: {
       data: viewWhatsappLog?.data ?? [],
-      count: totalRowsWhatsapp,
+      count: viewWhatsappLog?.total ?? 0,
       pagination: paginationWhatsapp,
       setPagination: setPaginationWhatsapp
     },
     sms: {
-      data: viewSmsLog?.data ?? [], // if you have SMS logs; else []
-      count: totalRowsSms,
+      data: viewSmsLog?.data ?? [],
+      count: viewSmsLog?.total ?? totalRowsSms ?? 0,
       pagination: paginationSms,
       setPagination: setPaginationSms
     }
@@ -526,8 +630,9 @@ const CampaignViewLogDialog = ({
       <DialogTitle className='flex flex-col gap-1 text-center'>
         <span className='text-xl font-semibold'>Campaign Performance Logs ({channelMap[selectedChannel] || ''})</span>
         <hr className='my-2 border-t border-gray-300' />
-        <div className='flex justify-center gap-4 text-sm'>
-          <div className='flex items-center gap-1'>Status of delivery :</div>
+
+        {/* ✅ One-line status legend */}
+        <div className='flex justify-center items-center gap-6 text-sm flex-wrap'>
           <div className='flex items-center gap-1 text-yellow-500'>
             <i className='ri-time-line' /> Queued
           </div>
@@ -537,14 +642,41 @@ const CampaignViewLogDialog = ({
           <div className='flex items-center gap-1 text-red-500'>
             <i className='ri-close-circle-line' /> Failed
           </div>
-          <div className='flex items-center gap-1 text-green-500'>
-            <i className='ri-mail-open-line' /> Open
-          </div>
+          {selectedChannel === 'email' && (
+            <div className='flex items-center gap-1 text-green-500'>
+              <i className='ri-mail-open-line' /> Open
+            </div>
+          )}
+        </div>
+
+        <div className='flex flex-col !items-start max-sm:w-full sm:flex-row sm:items-center gap-4'>
+          {/* <DebouncedInput
+            value={globalFilterLog ?? ''}
+            className='max-sm:w-full min-w-[220px]'
+            onChange={value => setGlobalFilterLog(String(value))}
+            placeholder='Search Announcement...'
+          /> */}
+          {/* <DebouncedInput
+            value={globalFilterLog ?? ''}
+            onEnter={val => {
+              setGlobalFilterLog(String(val))
+              // fetchUsers() // Enter press pe API call
+            }}
+            onChange={val => {
+              setGlobalFilterLog(String(val))
+              if (String(val).trim() === '') {
+                getNotificationViewLog()
+                getWhatsappViewLog()
+              }
+            }}
+            placeholder='Search User'
+            className='w-full'
+          /> */}
         </div>
       </DialogTitle>
 
       <form onSubmit={handleSubmit}>
-        <DialogContent className='overflow-visible'>
+        <DialogContent className='overflow-auto  max-h-[500px]'>
           <IconButton onClick={handleClose} className='absolute top-4 right-4'>
             <i className='ri-close-line text-textSecondary' />
           </IconButton>

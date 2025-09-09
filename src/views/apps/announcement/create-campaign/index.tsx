@@ -50,6 +50,7 @@ const CreateCampaign = () => {
   const { lang: locale } = useParams()
   const { settings } = useSettings()
   const connection = useSelector((state: RootState) => state.dataLack)
+  console.log('connection', connection)
 
   const announcementId = localStorage.getItem('announcementId')
   const searchParams = useSearchParams()
@@ -61,6 +62,8 @@ const CreateCampaign = () => {
   const [selectedData, setSelectedData] = useState([])
   // const [selectedData, setSelectedData] = useState<any[]>([])
   const [startDateTime, setStartDateTime] = useState<Dayjs | null>(dayjs())
+  console.log('startDateTime', startDateTime)
+
   //dataLack
   const [rolesListDataLack, setRolesListDataLack] = useState<RoleOption[]>([])
   const [selectedLabelsDataLack, setSelectedLabelsDataLack] = useState([])
@@ -81,11 +84,11 @@ const CreateCampaign = () => {
   const [openChart, setOpenChart] = useState(false)
 
   const [viewEmailLog, setViewEmailLog] = useState([])
-  
+
   const [viewNotificationLog, setViewNotificationLog] = useState([])
-  
+
   const [viewWhatsappLog, setViewWhatsappLog] = useState([])
-  
+
   const [viewSmsLog, setViewSmsLog] = useState([])
 
   const [error, setError] = useState('')
@@ -484,14 +487,12 @@ const CreateCampaign = () => {
         console.log('1111110000', formatted)
       }
 
-
       const res = await api.get(`${endPointApi.getCampaignAnnounceWise}`, {
         params: {
           announcement_id: localStorage.getItem('announcementId'),
           campaign_id: ids
         }
       })
-      console.log('resss', res)
 
       if (res?.data?.status === 200) {
         if (Array.isArray(res?.data?.role_only)) {
@@ -525,8 +526,10 @@ const CreateCampaign = () => {
         // If you need it for anything else later:
         // const formatted2 = toIdNameArray2(res?.data?.column_name);
         console.log('res?.data?.users', res?.data?.users)
-
-        // setSelectedData(res?.data?.users)
+        if (connection?.connectDataLack == 0) {
+          setSelectedData(res?.data?.users || [])
+        }
+        const combinedDateTime = `${res?.data?.campaign_date} ${res?.data?.campaign_time}`
         setNote(res?.data?.note)
         setStatus(res?.data?.campaign_status)
         setMode(res?.data?.publish_mode)
@@ -534,7 +537,7 @@ const CreateCampaign = () => {
         setRecurringCount(res?.data?.frequency_count)
         setRecurringType(res?.data?.frequency_type)
         setSelectedChannel(res?.data?.channels)
-        setStartDateTime(dayjs(`${res?.data?.campaign_date} ${res?.data?.formatted_campaign_time}`))
+        setStartDateTime(dayjs(combinedDateTime, 'YYYY-MM-DD HH:mm'))
         setAnnouncementTitle(res?.data?.announcement?.title)
       }
     } catch (err: any) {
@@ -916,6 +919,7 @@ const CreateCampaign = () => {
   return (
     <>
       {isLoading && <Loader />}
+      {loaderMain && <Loader />}
       <p style={{ color: settings.primaryColor }} className='font-bold flex items-center justify-between gap-2 mb-1'>
         <span className='flex items-center gap-2'>
           <span
@@ -943,13 +947,13 @@ const CreateCampaign = () => {
 
       <Card sx={{ mt: 4 }}>
         <Box p={6} position='relative'>
-          {/* {loadingDataLack ? (
+          {loaderMain ? (
             <Grid container spacing={2}>
               <Grid item>
                 <Skeleton variant='rectangular' width={1340} height={60} className='rounded-md' />
               </Grid>
             </Grid>
-          ) : ( */}
+          ) : (
           <TextField
             label='Campaign title'
             placeholder='Campaign title.....'
@@ -965,7 +969,7 @@ const CreateCampaign = () => {
             error={note?.length > 100}
             helperText={`${note?.length || 0}/100 characters`}
           />
-          {/* )} */}
+           )}
           {/* Icon positioned at bottom right */}
           <Box
             position='absolute'
@@ -1228,6 +1232,9 @@ const CreateCampaign = () => {
               <Typography variant='subtitle1' fontWeight='600'>
                 Preview:
               </Typography>
+               { console.log("0000", 
+                         selectedChannel)}
+                        
               <Typography>
                 {mode === 'one_time' && scheduleType === 'now' && (
                   <>
@@ -1297,6 +1304,8 @@ const CreateCampaign = () => {
                     .
                   </>
                 )}
+              
+                
                 {/* <b>
                   {ids
                     ? selectedChannel

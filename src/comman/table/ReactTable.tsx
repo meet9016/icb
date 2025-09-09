@@ -89,7 +89,11 @@ const ReactTable = ({
     },
     state: {
       columnFilters,
-      globalFilter
+      globalFilter,
+      pagination: {
+      pageIndex: page,     
+      pageSize: rowsPerPage,
+    }
     },
     onColumnFiltersChange: setColumnFilters,
     onGlobalFilterChange: setGlobalFilter,

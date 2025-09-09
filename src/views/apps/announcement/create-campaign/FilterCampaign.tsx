@@ -209,6 +209,7 @@ const FilterCampaign = ({
       if (seededRolesRef.current.has(roleNorm)) return // already seeded this role
 
       const wanted = ids ? filterWishSelectedRole[roleNorm] : defaultRoleSelections[roleNorm]
+
       if (!wanted || wanted.length === 0) {
         // No defaults defined for this role: mark as seeded to avoid rechecking forever
         seededRolesRef.current.add(roleNorm)

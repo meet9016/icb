@@ -51,6 +51,7 @@ interface UsersTypeWithAction {
   channel_name?: string
   frequency_type_name?: string
   campaign_date?: string
+  campaign_time?: string
   formatted_campaign_time?: string
   frequency_count?: number
   schedule_name?: 'now' | 'schedule'
@@ -177,6 +178,8 @@ const CampaignListPage = ({ tableData }: { tableData?: UsersType[] }) => {
   const [loaderSmsView, setLoaderSmsView] = useState(false)
   const [loaderWpView, setLoaderWpView] = useState(false)
 
+  const [globalFilterLog, setGlobalFilterLog] = useState('')
+
   const columns = useMemo<ColumnDef<UsersTypeWithAction, any>[]>(
     () => [
       columnHelper.accessor('note', {
@@ -262,9 +265,9 @@ const CampaignListPage = ({ tableData }: { tableData?: UsersType[] }) => {
         header: 'campaign date',
         cell: ({ row }) => <Typography>{row.original.campaign_date}</Typography>
       }),
-      columnHelper.accessor('formatted_campaign_time', {
+      columnHelper.accessor('campaign_time', {
         header: 'campaign time',
-        cell: ({ row }) => <Typography>{row.original.formatted_campaign_time}</Typography>
+        cell: ({ row }) => <Typography>{row.original.campaign_time}</Typography>
       }),
       columnHelper.accessor('frequency_count', {
         header: 'Repeat',
@@ -415,7 +418,7 @@ const CampaignListPage = ({ tableData }: { tableData?: UsersType[] }) => {
 
       formdata.append('announcement_id', ids || '')
       formdata.append('campaign_id', viewLogId)
-      formdata.append('search', '')
+      formdata.append('search', globalFilterLog)
       formdata.append('per_page', paginationEmail.perPage.toString())
       formdata.append('page', (paginationEmail.page + 1).toString())
       try {
@@ -439,7 +442,7 @@ const CampaignListPage = ({ tableData }: { tableData?: UsersType[] }) => {
     if (openDialog) {
       getViewLog()
     }
-  }, [viewLogId, openDialog, paginationEmail.page, paginationEmail.perPage, globalFilter])
+  }, [viewLogId, openDialog, paginationEmail.page, paginationEmail.perPage, globalFilterLog])
 
   const getNotificationViewLog = async () => {
     if (channelName === 'push_notification') {
@@ -448,7 +451,7 @@ const CampaignListPage = ({ tableData }: { tableData?: UsersType[] }) => {
 
       formdata.append('announcement_id', ids || '')
       formdata.append('campaign_id', viewLogId)
-      formdata.append('search', '')
+      formdata.append('search', globalFilterLog)
       formdata.append('per_page', paginationNotification.perPage.toString())
       formdata.append('page', (paginationNotification.page + 1).toString())
       try {
@@ -473,7 +476,7 @@ const CampaignListPage = ({ tableData }: { tableData?: UsersType[] }) => {
     if (openDialog) {
       getNotificationViewLog()
     }
-  }, [viewLogId, openDialog, paginationNotification.page, paginationNotification.perPage, globalFilter])
+  }, [viewLogId, openDialog, paginationNotification.page, paginationNotification.perPage, globalFilterLog])
 
   const getWhatsappViewLog = async () => {
     if (channelName === 'wp') {
@@ -482,7 +485,7 @@ const CampaignListPage = ({ tableData }: { tableData?: UsersType[] }) => {
 
       formdata.append('announcement_id', ids || '')
       formdata.append('campaign_id', viewLogId)
-      formdata.append('search', '')
+      formdata.append('search', globalFilterLog)
       formdata.append('per_page', paginationWhatsapp.perPage.toString())
       formdata.append('page', (paginationWhatsapp.page + 1).toString())
       try {
@@ -507,7 +510,7 @@ const CampaignListPage = ({ tableData }: { tableData?: UsersType[] }) => {
     if (openDialog) {
       getWhatsappViewLog()
     }
-  }, [viewLogId, openDialog, paginationWhatsapp.page, paginationWhatsapp.perPage, globalFilter])
+  }, [viewLogId, openDialog, paginationWhatsapp.page, paginationWhatsapp.perPage, globalFilterLog])
   const getSmsViewLog = async () => {
     if (channelName === 'sms') {
       setLoaderSmsView(true)
@@ -515,7 +518,7 @@ const CampaignListPage = ({ tableData }: { tableData?: UsersType[] }) => {
 
       formdata.append('announcement_id', ids || '')
       formdata.append('campaign_id', viewLogId)
-      formdata.append('search', '')
+      formdata.append('search', globalFilterLog)
       formdata.append('per_page', paginationSms.perPage.toString())
       formdata.append('page', (paginationSms.page + 1).toString())
       try {
@@ -540,7 +543,7 @@ const CampaignListPage = ({ tableData }: { tableData?: UsersType[] }) => {
     if (openDialog) {
       getSmsViewLog()
     }
-  }, [viewLogId, openDialog, paginationSms.page, paginationSms.perPage, globalFilter])
+  }, [viewLogId, openDialog, paginationSms.page, paginationSms.perPage, globalFilterLog])
   return (
     <>
       <p style={{ color: settings.primaryColor }} className='font-bold flex items-center gap-2 mb-6'>
@@ -750,6 +753,13 @@ const CampaignListPage = ({ tableData }: { tableData?: UsersType[] }) => {
           setViewWhatsappLog={setViewWhatsappLog}
           setViewSmsLog={setViewSmsLog}
 
+          setGlobalFilterLog={setGlobalFilterLog}
+          globalFilterLog={globalFilterLog}
+
+          getViewLog={getViewLog}
+          getNotificationViewLog={getNotificationViewLog}
+          getWhatsappViewLog={getWhatsappViewLog}
+          getSmsViewLog={getSmsViewLog}
         />
       )}
     </>
