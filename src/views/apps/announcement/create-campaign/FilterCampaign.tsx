@@ -134,7 +134,6 @@ const FilterCampaign = ({
       [field]: value
     }))
   }
-
   const handleChangeTeacherForm = (field: string, value: any) => {
     setTeacherForm((prev: any) => ({
       ...prev,
@@ -149,12 +148,67 @@ const FilterCampaign = ({
     }))
   }
 
-  const handleFilterChangeDataLack = (newValues: any) => {
+  const handleFilterChangeDataLack = (newValues: any, reason: any, details: any) => {
     setSelectedLabelsDataLack(newValues)
-
-    // optional: if nothing is selected → reset all
     if (!newValues || newValues.length === 0) {
-      setSelectedData([]) // or reset all forms
+      setSelectedData([])
+    }
+    if (reason === 'removeOption' && details?.option?.name === 'Parent') {
+      setParentForm({
+        par_code: '',
+        par_name: '',
+        contact_type: [],
+        email: '',
+        mobile_phone1: '',
+        mobile_phone2: '',
+        addr1: '',
+        addr2: '',
+        town_sub: '',
+        state_code: '',
+        post_code: '',
+        home_phone: ''
+      })
+    } else if (reason === 'removeOption' && details?.option?.name === 'Teacher') {
+      setTeacherForm({
+        first_name: '',
+        gender: '',
+        teacher_code: '',
+        emp_code: '',
+        salutation: '',
+        surname: '',
+        other_name: '',
+        preferred_name: '',
+        dob: '',
+        start_date: '',
+        end_date: '',
+        emp_status: '',
+        award_code: '',
+        award_description: '',
+        rol_code: '',
+        rol_description: '',
+        position_title: '',
+        p_mobile: '',
+        p_email: '',
+        school_email: ''
+      })
+    } else if (reason === 'removeOption' && details?.option?.name === 'Student') {
+      setStudentForm({
+        first_name: '',
+        gender: '',
+        last_name: '',
+        mobile_phone1: '',
+        email: '',
+        par_code: '',
+        student_code: '',
+        preferred_name: '',
+        year_group: '',
+        class_code: '',
+        dob: '',
+        entry_date: '',
+        exit_date: '',
+        status: '',
+        house: ''
+      })
     }
   }
 
@@ -337,7 +391,9 @@ const FilterCampaign = ({
                       getOptionLabel={option => option.name}
                       isOptionEqualToValue={(option, value) => option.id === value.id}
                       value={selectedLabelsDataLack}
-                      onChange={(event, newValue) => handleFilterChangeDataLack(newValue)}
+                      onChange={(event, newValue, reason, details) => {
+                        handleFilterChangeDataLack(newValue, reason, details)
+                      }}
                       sx={{ width: 600 }}
                       renderInput={params => <TextField {...params} />}
                     />
