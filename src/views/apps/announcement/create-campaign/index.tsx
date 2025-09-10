@@ -50,7 +50,6 @@ const CreateCampaign = () => {
   const { lang: locale } = useParams()
   const { settings } = useSettings()
   const connection = useSelector((state: RootState) => state.dataLack)
-  console.log('connection', connection)
 
   const announcementId = localStorage.getItem('announcementId')
   const searchParams = useSearchParams()
@@ -62,8 +61,6 @@ const CreateCampaign = () => {
   const [selectedData, setSelectedData] = useState([])
   // const [selectedData, setSelectedData] = useState<any[]>([])
   const [startDateTime, setStartDateTime] = useState<Dayjs | null>(dayjs())
-  console.log('startDateTime', startDateTime)
-
   //dataLack
   const [rolesListDataLack, setRolesListDataLack] = useState<RoleOption[]>([])
   const [selectedLabelsDataLack, setSelectedLabelsDataLack] = useState([])
@@ -99,19 +96,19 @@ const CreateCampaign = () => {
 
   const [paginationInfoLog, setPaginationInfoLog] = useState({
     page: 0,
-    perPage: 10
+    perPage: 20
   })
 
   // Email
-  const [paginationEmail, setPaginationEmail] = useState({ page: 0, perPage: 10 })
+  const [paginationEmail, setPaginationEmail] = useState({ page: 0, perPage: 20 })
   const [totalRowsEmail, setTotalRowsEmail] = useState(0)
 
   // Notification
-  const [paginationNotification, setPaginationNotification] = useState({ page: 0, perPage: 10 })
+  const [paginationNotification, setPaginationNotification] = useState({ page: 0, perPage: 20 })
   const [totalRowsNotification, setTotalRowsNotification] = useState(0)
 
   //Whatsapp
-  const [paginationWhatsapp, setPaginationWhatsapp] = useState({ page: 0, perPage: 10 })
+  const [paginationWhatsapp, setPaginationWhatsapp] = useState({ page: 0, perPage: 20 })
   const [totalRowsWhatsapp, setTotalRowsWhatsapp] = useState(0)
 
   const [connectDataLack, setConnectDataLack] = useState('')
@@ -1232,9 +1229,6 @@ const CreateCampaign = () => {
               <Typography variant='subtitle1' fontWeight='600'>
                 Preview:
               </Typography>
-               { console.log("0000", 
-                         selectedChannel)}
-                        
               <Typography>
                 {mode === 'one_time' && scheduleType === 'now' && (
                   <>
@@ -1304,8 +1298,6 @@ const CreateCampaign = () => {
                     .
                   </>
                 )}
-              
-                
                 {/* <b>
                   {ids
                     ? selectedChannel

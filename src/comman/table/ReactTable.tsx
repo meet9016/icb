@@ -65,7 +65,7 @@ const ReactTable = ({
   rowsPerPage,
   onPageChange,
   onRowsPerPageChange,
-  rowsPerPageOptions = [10, 25, 50],
+  rowsPerPageOptions = [20, 25, 50],
   className = ''
 }: {
   data: any[],
@@ -90,10 +90,10 @@ const ReactTable = ({
     state: {
       columnFilters,
       globalFilter,
-      pagination: {
-      pageIndex: page,     
-      pageSize: rowsPerPage,
-    }
+    //   pagination: {
+    //   pageIndex: page,     
+    //   pageSize: rowsPerPage,
+    // }
     },
     onColumnFiltersChange: setColumnFilters,
     onGlobalFilterChange: setGlobalFilter,

@@ -146,19 +146,19 @@ const CampaignListPage = ({ tableData }: { tableData?: UsersType[] }) => {
   })
 
   // Email
-  const [paginationEmail, setPaginationEmail] = useState({ page: 0, perPage: 10 })
+  const [paginationEmail, setPaginationEmail] = useState({ page: 0, perPage: 20 })
   const [totalRowsEmail, setTotalRowsEmail] = useState(0)
 
   // Notification
-  const [paginationNotification, setPaginationNotification] = useState({ page: 0, perPage: 10 })
+  const [paginationNotification, setPaginationNotification] = useState({ page: 0, perPage: 20 })
   const [totalRowsNotification, setTotalRowsNotification] = useState(0)
 
   // Whatsapp
-  const [paginationWhatsapp, setPaginationWhatsapp] = useState({ page: 0, perPage: 10 })
+  const [paginationWhatsapp, setPaginationWhatsapp] = useState({ page: 0, perPage: 20 })
   const [totalRowWhatsapp, setTotalRowsWhatsapp] = useState(0)
 
   // Sms
-  const [paginationSms, setPaginationSms] = useState({ page: 0, perPage: 10 })
+  const [paginationSms, setPaginationSms] = useState({ page: 0, perPage: 20 })
   const [totalRowsSms, setTotalRowsSms] = useState(0)
 
   const [loading, setLoading] = useState(false)

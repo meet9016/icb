@@ -219,32 +219,6 @@ const CampaignViewLogDialog = ({
           header: 'Email',
           cell: ({ row }) => <Typography>{row.original.email ?? '-'}</Typography>
         }),
-        columnHelper.accessor('scheduled_at', {
-          header: 'Scheduled Date',
-          cell: ({ row }) => {
-            const raw = row.original.scheduled_at
-            const formatted = raw ? dayjs(raw).format('YYYY-MM-DD') : '-'
-            return <Typography>{formatted}</Typography>
-          }
-        }),
-        columnHelper.accessor('scheduled_at', {
-          header: 'Scheduled time',
-          cell: ({ row }) => {
-            const raw = row.original.scheduled_at
-            const formatted = raw ? dayjs(raw).format('HH:mm') : '-'
-            return <Typography>{formatted}</Typography>
-          }
-        }),
-        columnHelper.accessor('sent_date', {
-          header: 'delivered Date',
-          cell: ({ row }) => <Typography>{row.original.sent_time ? row.original.sent_date : '-'}</Typography>
-        }),
-        columnHelper.accessor('sent_time', {
-          header: 'delivered Time',
-          cell: ({ row }) => (
-            <Typography>{row.original.sent_time ? row.original.sent_time.slice(0, 5) : '-'}</Typography>
-          )
-        }),
         columnHelper.accessor('status', {
           header: 'Status',
           cell: ({ row }) => {
@@ -274,6 +248,31 @@ const CampaignViewLogDialog = ({
               </div>
             )
           }
+        }),
+        columnHelper.accessor('scheduled_at', {
+          header: 'Scheduled At',
+          cell: ({ row }) => {
+            const raw = row.original.scheduled_at
+            const formatted = raw ? dayjs(raw).format('YYYY-MM-DD HH:mm') : '-'
+            return <Typography>{formatted}</Typography>
+          }
+        }),
+        columnHelper.accessor('sent_date', {
+          header: 'Sent At',
+          cell: ({ row }) => {
+            const { sent_date, sent_time } = row.original
+            return <Typography>{sent_time ? `${sent_date ?? ''} ${sent_time.slice(0, 5)}`.trim() : '-'}</Typography>
+          }
+        }),
+        // columnHelper.accessor('sent_time', {
+        //   header: 'Delivered On',
+        //   cell: ({ row }) => (
+        //     <Typography>{row.original.sent_time ? row.original.sent_time.slice(0, 5) : '-'}</Typography>
+        //   )
+        // }),
+        columnHelper.accessor('opened_at', {
+          header: 'Read At',
+          cell: ({ row }) => <Typography>{row.original.opened_at ?? '-'}</Typography>
         })
       ]
     } else if (selectedChannel === 'sms') {
@@ -285,40 +284,6 @@ const CampaignViewLogDialog = ({
         columnHelper.accessor('user_phone', {
           header: 'phone',
           cell: ({ row }) => <Typography>{row.original.user_phone ?? '-'}</Typography>
-        }),
-        columnHelper.accessor('scheduled_at', {
-          header: 'Scheduled Date',
-          // cell: ({ row }) => <Typography>{row.original.sent_at ?? '-'}</Typography>
-          cell: ({ row }) => {
-            const raw = row.original.scheduled_at
-            const formatted = raw ? dayjs(raw).format('YYYY-MM-DD') : '-'
-            return <Typography>{formatted}</Typography>
-          }
-        }),
-        columnHelper.accessor('scheduled_at', {
-          header: 'Scheduled time',
-          // cell: ({ row }) => <Typography>{row.original.sent_at ?? '-'}</Typography>
-          cell: ({ row }) => {
-            const raw = row.original.scheduled_at
-            const formatted = raw ? dayjs(raw).format('HH:mm') : '-'
-            return <Typography>{formatted}</Typography>
-          }
-        }),
-        columnHelper.accessor('sent_at', {
-          header: 'SendDate',
-          cell: ({ row }) => {
-            const raw = row.original.sent_at
-            const formatted = raw ? dayjs(raw).format('YYYY-MM-DD') : '-'
-            return <Typography>{formatted}</Typography>
-          }
-        }),
-        columnHelper.accessor('sent_at', {
-          header: 'SendTime',
-          cell: ({ row }) => {
-            const raw = row.original.sent_at
-            const formatted = raw ? dayjs(raw).format('HH:mm') : '-'
-            return <Typography>{formatted}</Typography>
-          }
         }),
         columnHelper.accessor('status', {
           header: 'Status',
@@ -348,11 +313,23 @@ const CampaignViewLogDialog = ({
               </div>
             )
           }
-        })
-        // columnHelper.accessor('hours', {
-        //   header: 'delivered Time',
-        //   cell: ({ row }) => <Typography>{row.original.hours}</Typography>
-        // })
+        }),
+        columnHelper.accessor('scheduled_at', {
+          header: 'Scheduled At',
+          cell: ({ row }) => {
+            const raw = row.original.scheduled_at
+            const formatted = raw ? dayjs(raw).format('YYYY-MM-DD HH:mm') : '-'
+            return <Typography>{formatted}</Typography>
+          }
+        }),
+        columnHelper.accessor('sent_at', {
+          header: 'Sent At',
+          cell: ({ row }) => {
+            const raw = row.original.sent_at
+            const formatted = raw ? dayjs(raw).format('YYYY-MM-DD HH:mm') : '-'
+            return <Typography>{formatted}</Typography>
+          }
+        }),
       ]
     } else if (selectedChannel === 'push_notification') {
       return [
@@ -364,28 +341,10 @@ const CampaignViewLogDialog = ({
           header: 'phone',
           cell: ({ row }) => <Typography>{row.original.user_phone ?? '-'}</Typography>
         }),
-        columnHelper.accessor('scheduled_at', {
-          header: 'Scheduled Date',
-          // cell: ({ row }) => <Typography>{row.original.scheduled_at ?? '-'}</Typography>
-          cell: ({ row }) => {
-            const raw = row.original.scheduled_at
-            const formatted = raw ? dayjs(raw).format('YYYY-MM-DD') : '-'
-            return <Typography>{formatted}</Typography>
-          }
-        }),
-        columnHelper.accessor('scheduled_at', {
-          header: 'Scheduled Time',
-          // cell: ({ row }) => <Typography>{row.original.scheduled_at ?? '-'}</Typography>
-          cell: ({ row }) => {
-            const raw = row.original.scheduled_at
-            const formatted = raw ? dayjs(raw).format('HH:mm') : '-'
-            return <Typography>{formatted}</Typography>
-          }
-        }),
-        columnHelper.accessor('sent_at', {
-          header: 'Send',
-          cell: ({ row }) => <Typography>{row.original.sent_at ?? '-'}</Typography>
-        }),
+        // columnHelper.accessor('user_phone', {
+        //   header: 'Device Name',
+        //   cell: ({ row }) => <Typography>{row.original.user_phone ?? '-'}</Typography>
+        // }),
         columnHelper.accessor('status', {
           header: 'Status',
           cell: ({ row }) => {
@@ -410,8 +369,7 @@ const CampaignViewLogDialog = ({
 
             // pick values from statusMap safely
             const { icon, color, label } = statusKey && statusMap[statusKey] ? statusMap[statusKey] : '-'
-            const tooltipTitle =
-              status === 'failed' ? row.original.error_message || 'Failed' : row.original.status || 'Unknown'
+            const tooltipTitle = status === 'failed' ? row.original.error_message || 'Failed' : statusKey || 'Unknown'
             return (
               <div className='flex items-center gap-2'>
                 <Tooltip title={tooltipTitle}>
@@ -422,9 +380,29 @@ const CampaignViewLogDialog = ({
               </div>
             )
           }
-        })
+        }),
+        columnHelper.accessor('scheduled_at', {
+          header: 'Scheduled At',
+          cell: ({ row }) => {
+            const raw = row.original.scheduled_at
+            const formatted = raw ? dayjs(raw).format('YYYY-MM-DD HH:mm') : '-'
+            return <Typography>{formatted}</Typography>
+          }
+        }),
+        columnHelper.accessor('sent_at', {
+          header: 'Sent At',
+          cell: ({ row }) => {
+            const raw = row.original.sent_at
+            const formatted = raw ? dayjs(raw).format('YYYY-MM-DD HH:mm') : '-'
+            return <Typography>{formatted}</Typography>
+          }
+        }),
+         // columnHelper.accessor('hours', {
+        //   header: 'Delivered At',
+        //   cell: ({ row }) => <Typography>{row.original.hours ?? '-'}</Typography>
+        // }),
         // columnHelper.accessor('hours', {
-        //   header: 'delivered Time',
+        //   header: 'Opened at',
         //   cell: ({ row }) => <Typography>{row.original.hours}</Typography>
         // })
       ]
@@ -437,42 +415,6 @@ const CampaignViewLogDialog = ({
         columnHelper.accessor('phone', {
           header: 'Phone',
           cell: ({ row }) => <Typography>{row.original.phone ?? '-'}</Typography>
-        }),
-        columnHelper.accessor('scheduled_at', {
-          header: 'Scheduled Date',
-          // cell: ({ row }) => <Typography>{row.original.scheduled_at ?? '-'}</Typography>
-          cell: ({ row }) => {
-            const raw = row.original.scheduled_at
-            const formatted = raw ? dayjs(raw).format('YYYY-MM-DD') : '-'
-            return <Typography>{formatted}</Typography>
-          }
-        }),
-        columnHelper.accessor('scheduled_at', {
-          header: 'Scheduled time',
-          // cell: ({ row }) => <Typography>{row.original.scheduled_at ?? '-'}</Typography>
-          cell: ({ row }) => {
-            const raw = row.original.scheduled_at
-            const formatted = raw ? dayjs(raw).format('HH:mm') : '-'
-            return <Typography>{formatted}</Typography>
-          }
-        }),
-        columnHelper.accessor('sent_date', {
-          header: 'Send Date',
-          // cell: ({ row }) => <Typography>{row.original.scheduled_at ?? '-'}</Typography>
-          cell: ({ row }) => {
-            const raw = row.original.sent_date
-            const formatted = raw ? dayjs(raw).format('YYYY-MM-DD') : '-'
-            return <Typography>{formatted}</Typography>
-          }
-        }),
-        columnHelper.accessor('sent_time', {
-          header: 'Send time',
-          // cell: ({ row }) => <Typography>{row.original.scheduled_at ?? '-'}</Typography>
-          cell: ({ row }) => {
-            const raw = row.original.sent_time
-            const formatted = raw ? dayjs(raw).format('HH:mm') : '-'
-            return <Typography>{formatted}</Typography>
-          }
         }),
         columnHelper.accessor('status', {
           header: 'Status',
@@ -503,13 +445,32 @@ const CampaignViewLogDialog = ({
               </div>
             )
           }
-        })
+        }),
+        columnHelper.accessor('scheduled_at', {
+          header: 'Scheduled At',
+          // cell: ({ row }) => <Typography>{row.original.scheduled_at ?? '-'}</Typography>
+          cell: ({ row }) => {
+            const raw = row.original.scheduled_at
+            const formatted = raw ? dayjs(raw).format('YYYY-MM-DD HH:mm') : '-'
+            return <Typography>{formatted}</Typography>
+          }
+        }),
+        columnHelper.accessor('sent_date', {
+          header: 'Send At',
+          cell: ({ row }) => {
+            const raw = row.original.sent_date
+            const formatted = raw ? dayjs(raw).format('YYYY-MM-DD HH:mm') : '-'
+            return <Typography>{formatted}</Typography>
+          }
+        }),
+        
+
         // columnHelper.accessor('hours', {
-        //   header: 'Read Time',
+        //   header: 'Delivered At',
         //   cell: ({ row }) => <Typography>{row.original.hours ?? '-'}</Typography>
         // }),
         // columnHelper.accessor('hours', {
-        //   header: 'Delivered Time',
+        //   header: 'Read At',
         //   cell: ({ row }) => <Typography>{row.original.hours}</Typography>
         // })
       ]
@@ -687,7 +648,7 @@ const CampaignViewLogDialog = ({
               columns={columns}
               count={count ?? 0}
               page={pagination.page ?? 0} // ensure 0-based for UI
-              rowsPerPage={pagination.perPage ?? 10}
+              rowsPerPage={pagination.perPage ?? 20}
               onPageChange={(_, newPage) => {
                 setPagination((prev: any) => ({ ...prev, page: newPage }))
               }}
