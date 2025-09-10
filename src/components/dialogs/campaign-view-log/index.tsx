@@ -329,7 +329,7 @@ const CampaignViewLogDialog = ({
             const formatted = raw ? dayjs(raw).format('YYYY-MM-DD HH:mm') : '-'
             return <Typography>{formatted}</Typography>
           }
-        }),
+        })
       ]
     } else if (selectedChannel === 'push_notification') {
       return [
@@ -396,8 +396,8 @@ const CampaignViewLogDialog = ({
             const formatted = raw ? dayjs(raw).format('YYYY-MM-DD HH:mm') : '-'
             return <Typography>{formatted}</Typography>
           }
-        }),
-         // columnHelper.accessor('hours', {
+        })
+        // columnHelper.accessor('hours', {
         //   header: 'Delivered At',
         //   cell: ({ row }) => <Typography>{row.original.hours ?? '-'}</Typography>
         // }),
@@ -462,8 +462,7 @@ const CampaignViewLogDialog = ({
             const formatted = raw ? dayjs(raw).format('YYYY-MM-DD HH:mm') : '-'
             return <Typography>{formatted}</Typography>
           }
-        }),
-        
+        })
 
         // columnHelper.accessor('hours', {
         //   header: 'Delivered At',
@@ -608,6 +607,14 @@ const CampaignViewLogDialog = ({
               <i className='ri-mail-open-line' /> Open
             </div>
           )}
+          <p className='mt-2 text-xs text-gray-500 flex justify-center items-center gap-2'>
+            <i className='ri-information-line text-base' />
+            <span>
+              Tip: Hover the <b>Status</b> icon to see more details — for example, error reason on{' '}
+              <span className='text-red-500 font-medium'>Failed</span>
+              {selectedChannel === 'email' && ' or open time on Opened'}.
+            </span>
+          </p>
         </div>
 
         <div className='flex flex-col !items-start max-sm:w-full sm:flex-row sm:items-center gap-4'>
@@ -648,7 +655,7 @@ const CampaignViewLogDialog = ({
               columns={columns}
               count={count ?? 0}
               page={pagination.page ?? 0} // ensure 0-based for UI
-              rowsPerPage={pagination.perPage ?? 20}
+              rowsPerPage={pagination.perPage ?? 10}
               onPageChange={(_, newPage) => {
                 setPagination((prev: any) => ({ ...prev, page: newPage }))
               }}

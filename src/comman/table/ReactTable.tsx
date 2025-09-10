@@ -46,12 +46,12 @@ const Filter = ({ column, table }: { column: Column<any, unknown>; table: Table<
 
   return (
     <div className='flex gap-x-2'>
-    <TextField
-      fullWidth
-      size='small'
-      value={(columnFilterValue ?? '') as string}
-      onChange={e => column.setFilterValue(e.target.value)}
-      placeholder='Search...'
+      <TextField
+        fullWidth
+        size='small'
+        value={(columnFilterValue ?? '') as string}
+        onChange={e => column.setFilterValue(e.target.value)}
+        placeholder='Search...'
       />
     </div>
   )
@@ -65,17 +65,17 @@ const ReactTable = ({
   rowsPerPage,
   onPageChange,
   onRowsPerPageChange,
-  rowsPerPageOptions = [20, 25, 50],
+  rowsPerPageOptions = [10, 25, 50],
   className = ''
 }: {
-  data: any[],
-  columns: ColumnDef<any, any>[],
-  count: number,
-  page: number,
-  rowsPerPage: number,
-  onPageChange: (event: unknown, newPage: number) => void, // ✅ Fixed typing
-  onRowsPerPageChange: (newRowsPerPage: number) => void,   // ✅ Adjusted typing
-  rowsPerPageOptions?: (number | { label: string, value: number })[],
+  data: any[]
+  columns: ColumnDef<any, any>[]
+  count: number
+  page: number
+  rowsPerPage: number
+  onPageChange: (event: unknown, newPage: number) => void // ✅ Fixed typing
+  onRowsPerPageChange: (newRowsPerPage: number) => void // ✅ Adjusted typing
+  rowsPerPageOptions?: (number | { label: string; value: number })[]
   className?: string
 }) => {
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([])
@@ -84,27 +84,41 @@ const ReactTable = ({
   const table = useReactTable({
     data,
     columns,
-    filterFns: {
-      fuzzy: fuzzyFilter
-    },
+    filterFns: { fuzzy: fuzzyFilter },
+
+    // ✅ fully controlled state from parent
     state: {
       columnFilters,
       globalFilter,
-    //   pagination: {
-    //   pageIndex: page,     
-    //   pageSize: rowsPerPage,
-    // }
+      pagination: {
+        pageIndex: page, // 0-based
+        pageSize: rowsPerPage
+      }
     },
-    onColumnFiltersChange: setColumnFilters,
-    onGlobalFilterChange: setGlobalFilter,
-    globalFilterFn: fuzzyFilter,
+
+    // ✅ tell TanStack we're paginating on the server
+    manualPagination: true,
+    pageCount: Math.max(1, Math.ceil((count ?? 0) / (rowsPerPage || 10))), // total pages
+
+    // ✅ let TanStack notify us; we call parent handlers
+    onPaginationChange: updater => {
+      const next = typeof updater === 'function' ? updater({ pageIndex: page, pageSize: rowsPerPage }) : updater
+
+      if (next.pageIndex !== page) {
+        onPageChange(undefined as any, next.pageIndex) // MUI signature (event, newPage)
+      }
+      if (next.pageSize !== rowsPerPage) {
+        onRowsPerPageChange(next.pageSize)
+      }
+    },
+
+    // keep other models (no client pagination model)
     getCoreRowModel: getCoreRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
     getSortedRowModel: getSortedRowModel(),
-    getPaginationRowModel: getPaginationRowModel(),
-    getFacetedRowModel: getFacetedRowModel(),
-    getFacetedUniqueValues: getFacetedUniqueValues(),
-    getFacetedMinMaxValues: getFacetedMinMaxValues()
+
+    // optional: avoid jumping back to page 0 when data changes
+    autoResetPageIndex: false
   })
 
   return (
@@ -115,15 +129,9 @@ const ReactTable = ({
             {table.getHeaderGroups().map(headerGroup => (
               <tr key={headerGroup.id}>
                 {headerGroup.headers.map(header => (
-                  <th
-                    key={header.id}
-                    className="h-[42px] text-xs"
-                  >
+                  <th key={header.id} className='h-[42px] text-xs'>
                     {!header.isPlaceholder && (
-                      <div
-                        className="justify-center items-center"
-                        onClick={header.column.getToggleSortingHandler()}
-                      >
+                      <div className='justify-center items-center' onClick={header.column.getToggleSortingHandler()}>
                         {flexRender(header.column.columnDef.header, header.getContext())}
                       </div>
                     )}
@@ -135,7 +143,9 @@ const ReactTable = ({
           <tbody>
             {table.getFilteredRowModel().rows.length === 0 ? (
               <tr>
-                <td colSpan={table.getAllColumns().length} className='text-center'>No data available</td>
+                <td colSpan={table.getAllColumns().length} className='text-center'>
+                  No data available
+                </td>
               </tr>
             ) : (
               table.getRowModel().rows.map(row => (
