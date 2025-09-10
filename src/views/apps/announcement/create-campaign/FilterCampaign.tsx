@@ -13,7 +13,9 @@ import {
   Stack,
   Skeleton,
   Chip,
-  Paper
+  Paper,
+  Checkbox,
+  ListItemText
 } from '@mui/material'
 import {
   awardCodeDropDown,
@@ -460,7 +462,8 @@ const FilterCampaign = ({
                           >
                             {field.filter_values.split(',').map((option: string, i: number) => (
                               <MenuItem key={i} value={option.trim()}>
-                                {option.trim()}
+                                <Checkbox checked={(studentForm?.[field.id] || []).indexOf(option.trim()) > -1} />
+                                <ListItemText primary={option.trim()} />
                               </MenuItem>
                             ))}
                           </TextField>
@@ -503,6 +506,65 @@ const FilterCampaign = ({
                         {/* {console.log('field.filter_values', field.filter_values)} */}
 
                         {field.filter_values !== null ? (
+                          // <TextField
+                          //   label={field.name}
+                          //   select
+                          //   fullWidth
+                          //   value={parentForm?.[field.id] || []}
+                          //   onChange={e => handleChangeParentColumnFilter(field.id, e.target.value)}
+                          //   SelectProps={{
+                          //     multiple: true,
+                          //     renderValue: (selected: any) => {
+                          //       // if JSON options → map ids back to labels
+                          //       try {
+                          //         const parsed = JSON.parse(field.filter_values)
+                          //         if (Array.isArray(parsed)) {
+                          //           return selected
+                          //             .map((sel: any) => {
+                          //               const match = parsed.find((opt: any) => opt.contact_type === sel)
+                          //               return match ? match.contact_desc : sel
+                          //             })
+                          //             .join(', ')
+                          //         }
+                          //       } catch {
+                          //         // fallback for comma-separated values
+                          //       }
+                          //       return selected.join(', ')
+                          //     }
+                          //   }}
+                          // >
+                          //   {(() => {
+                          //     let options: any[] = []
+                          //     try {
+                          //       const parsed = JSON.parse(field.filter_values)
+                          //       if (
+                          //         Array.isArray(parsed) &&
+                          //         parsed.every(opt => opt.contact_type && opt.contact_desc)
+                          //       ) {
+                          //         options = parsed.map((opt: any) => ({
+                          //           value: opt.contact_type,
+                          //           label: opt.contact_desc
+                          //         }))
+                          //       } else {
+                          //         options = field.filter_values.split(',').map((opt: string) => ({
+                          //           value: opt.trim(),
+                          //           label: opt.trim()
+                          //         }))
+                          //       }
+                          //     } catch {
+                          //       options = field.filter_values.split(',').map((opt: string) => ({
+                          //         value: opt.trim(),
+                          //         label: opt.trim()
+                          //       }))
+                          //     }
+
+                          //     return options.map((opt, i) => (
+                          //       <MenuItem key={i} value={opt.value}>
+                          //         {opt.label}
+                          //       </MenuItem>
+                          //     ))
+                          //   })()}
+                          // </TextField>
                           <TextField
                             label={field.name}
                             select
@@ -512,7 +574,6 @@ const FilterCampaign = ({
                             SelectProps={{
                               multiple: true,
                               renderValue: (selected: any) => {
-                                // if JSON options → map ids back to labels
                                 try {
                                   const parsed = JSON.parse(field.filter_values)
                                   if (Array.isArray(parsed)) {
@@ -523,9 +584,7 @@ const FilterCampaign = ({
                                       })
                                       .join(', ')
                                   }
-                                } catch {
-                                  // fallback for comma-separated values
-                                }
+                                } catch {}
                                 return selected.join(', ')
                               }
                             }}
@@ -557,7 +616,8 @@ const FilterCampaign = ({
 
                               return options.map((opt, i) => (
                                 <MenuItem key={i} value={opt.value}>
-                                  {opt.label}
+                                  <Checkbox checked={(parentForm?.[field.id] || []).indexOf(opt.value) > -1} />
+                                  <ListItemText primary={opt.label} />
                                 </MenuItem>
                               ))
                             })()}
@@ -602,7 +662,8 @@ const FilterCampaign = ({
                           >
                             {field.filter_values.split(',').map((option: string, i: number) => (
                               <MenuItem key={i} value={option.trim()}>
-                                {option.trim()}
+                                <Checkbox checked={(teacherForm?.[field.id] || []).indexOf(option.trim()) > -1} />
+                                <ListItemText primary={option.trim()} />
                               </MenuItem>
                             ))}
                           </TextField>
