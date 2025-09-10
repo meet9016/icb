@@ -84,9 +84,9 @@ const ReactTable = ({
   const table = useReactTable({
     data,
     columns,
-    filterFns: { fuzzy: fuzzyFilter },
-
-    // ✅ fully controlled state from parent
+    filterFns: {
+      fuzzy: fuzzyFilter
+    },
     state: {
       columnFilters,
       globalFilter,
@@ -95,8 +95,6 @@ const ReactTable = ({
         pageSize: rowsPerPage
       }
     },
-
-    // ✅ tell TanStack we're paginating on the server
     manualPagination: true,
     pageCount: Math.max(1, Math.ceil((count ?? 0) / (rowsPerPage || 10))), // total pages
 
@@ -124,40 +122,40 @@ const ReactTable = ({
   return (
     <Card>
       <div className='overflow-x-auto'>
-        <table className={styles.table}>
-          <thead>
-            {table.getHeaderGroups().map(headerGroup => (
-              <tr key={headerGroup.id}>
-                {headerGroup.headers.map(header => (
-                  <th key={header.id} className='h-[42px] text-xs'>
-                    {!header.isPlaceholder && (
-                      <div className='justify-center items-center' onClick={header.column.getToggleSortingHandler()}>
-                        {flexRender(header.column.columnDef.header, header.getContext())}
-                      </div>
-                    )}
-                  </th>
-                ))}
-              </tr>
-            ))}
-          </thead>
-          <tbody>
-            {table.getFilteredRowModel().rows.length === 0 ? (
-              <tr>
-                <td colSpan={table.getAllColumns().length} className='text-center'>
-                  No data available
-                </td>
-              </tr>
-            ) : (
-              table.getRowModel().rows.map(row => (
-                <tr key={row.id}>
-                  {row.getVisibleCells().map(cell => (
-                    <td key={cell.id}>{flexRender(cell.column.columnDef.cell, cell.getContext())}</td>
+          <table className={styles.table}>
+            <thead>
+              {table.getHeaderGroups().map(headerGroup => (
+                <tr key={headerGroup.id}>
+                  {headerGroup.headers.map(header => (
+                    <th key={header.id} className='h-[42px] text-xs'>
+                      {!header.isPlaceholder && (
+                        <div className='justify-center items-center' onClick={header.column.getToggleSortingHandler()}>
+                          {flexRender(header.column.columnDef.header, header.getContext())}
+                        </div>
+                      )}
+                    </th>
                   ))}
                 </tr>
-              ))
-            )}
-          </tbody>
-        </table>
+              ))}
+            </thead>
+            <tbody>
+              {table.getFilteredRowModel().rows.length === 0 ? (
+                <tr>
+                  <td colSpan={table.getAllColumns().length} className='text-center'>
+                    No data available
+                  </td>
+                </tr>
+              ) : (
+                table.getRowModel().rows.map(row => (
+                  <tr key={row.id}>
+                    {row.getVisibleCells().map(cell => (
+                      <td key={cell.id}>{flexRender(cell.column.columnDef.cell, cell.getContext())}</td>
+                    ))}
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
       </div>
       <TablePagination
         component='div'

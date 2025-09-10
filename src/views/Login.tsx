@@ -266,7 +266,11 @@ const Login = ({ mode }: { mode: Mode }) => {
                                   borderBottomRightRadius: '8px'
                                 }}
                               >
-                                {adminStore?.tenant_id || 'School_ID'}
+                                {adminStore?.tenant_id
+                                  ? adminStore.tenant_id === 'sapp'
+                                    ? 'Icb'
+                                    : adminStore.tenant_id
+                                  : 'School_ID'}
                               </span>
                             </InputAdornment>
                           )

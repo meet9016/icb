@@ -79,6 +79,7 @@ const CreateCampaign = () => {
   const [selectedLabels, setSelectedLabels] = useState([])
   const [openDialog, setOpenDialog] = useState(false)
   const [openChart, setOpenChart] = useState(false)
+console.log("selectedIds",selectedIds);
 
   const [viewEmailLog, setViewEmailLog] = useState([])
 

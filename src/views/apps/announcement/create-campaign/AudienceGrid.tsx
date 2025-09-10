@@ -219,6 +219,9 @@ const AudienceGrid = ({
   const onSelectionChangedFactory = (role: string) => (params: any) => {
     const nodes = params.api.getSelectedNodes()
     const ids = nodes.map((n: any) => n.data.id ?? n.data.user_id)
+    // const ids = nodes.map((n: any) => n.data.id ?? n.data.guardian_id)
+    console.log("ids",nodes);
+    
     selectedIdsByRoleRef.current[role] = ids
 
     const merged = Object.values(selectedIdsByRoleRef.current).flat()

@@ -231,13 +231,15 @@ const CampaignViewLogDialog = ({
               opened: { icon: 'ri-mail-open-line', color: 'text-green-500', label: 'Opened' } // 🔽 lowercase key
             }
 
-            const { icon, color, label } =
-              status in statusMap
-                ? statusMap[status]
-                : { icon: 'ri-question-line', color: 'text-gray-500', label: row.original.status || 'Unknown' }
+            const { icon, color, label } = status in statusMap ? statusMap[status] : '-'
 
             const tooltipTitle =
-              status === 'failed' ? row.original.error_message || 'Failed' : row.original.status || 'Unknown'
+              status === 'failed'
+                ? row.original.error_message || 'Failed'
+                : status === 'sending'
+                  ? 'Sent it'
+                  : row.original.status || 'Unknown'
+
             return (
               <div className='flex items-center gap-2'>
                 <Tooltip title={tooltipTitle}>
@@ -253,7 +255,7 @@ const CampaignViewLogDialog = ({
           header: 'Scheduled At',
           cell: ({ row }) => {
             const raw = row.original.scheduled_at
-            const formatted = raw ? dayjs(raw).format('YYYY-MM-DD HH:mm') : '-'
+            const formatted = raw ? dayjs(raw).format('DD-MM-YYYY hh:mm A') : '-'
             return <Typography>{formatted}</Typography>
           }
         }),
@@ -293,16 +295,18 @@ const CampaignViewLogDialog = ({
             const statusMap: Record<StatusType, StatusInfo> = {
               queued: { icon: 'ri-time-line', color: 'text-yellow-500', label: 'Queued' },
               sending: { icon: 'ri-send-plane-line', color: 'text-blue-500', label: 'Send' },
-              failed: { icon: 'ri-close-circle-line', color: 'text-red-500', label: 'Failed' },
-              opened: { icon: 'ri-mail-open-line', color: 'text-green-500', label: 'Opened' }
+              failed: { icon: 'ri-close-circle-line', color: 'text-red-500', label: 'Failed' }
             }
 
-            const { icon, color, label } =
-              status in statusMap
-                ? statusMap[status as StatusType]
-                : { icon: 'ri-question-line', color: 'text-gray-500', label: row.original.status || 'Unknown' }
+            const { icon, color, label } = status in statusMap ? statusMap[status as StatusType] : '-'
+
             const tooltipTitle =
-              status === 'failed' ? row.original.error_message || 'Failed' : row.original.status || 'Unknown'
+              status === 'failed'
+                ? row.original.error_message || 'Failed'
+                : status === 'sending'
+                  ? 'Sent it'
+                  : row.original.status || 'Unknown'
+
             return (
               <div className='flex items-center gap-2'>
                 <Tooltip title={tooltipTitle}>
@@ -318,7 +322,7 @@ const CampaignViewLogDialog = ({
           header: 'Scheduled At',
           cell: ({ row }) => {
             const raw = row.original.scheduled_at
-            const formatted = raw ? dayjs(raw).format('YYYY-MM-DD HH:mm') : '-'
+            const formatted = raw ? dayjs(raw).format('DD-MM-YYYY hh:mm A') : '-'
             return <Typography>{formatted}</Typography>
           }
         }),
@@ -326,7 +330,7 @@ const CampaignViewLogDialog = ({
           header: 'Sent At',
           cell: ({ row }) => {
             const raw = row.original.sent_at
-            const formatted = raw ? dayjs(raw).format('YYYY-MM-DD HH:mm') : '-'
+            const formatted = raw ? dayjs(raw).format('DD-MM-YYYY hh:mm A') : '-'
             return <Typography>{formatted}</Typography>
           }
         })
@@ -348,8 +352,6 @@ const CampaignViewLogDialog = ({
         columnHelper.accessor('status', {
           header: 'Status',
           cell: ({ row }) => {
-            console.log('row.original.status', row.original.status)
-
             // main status info map
             const statusMap: Record<string, StatusInfo> = {
               queued: { icon: 'ri-time-line', color: 'text-yellow-500', label: 'Queued' },
@@ -368,8 +370,20 @@ const CampaignViewLogDialog = ({
             const statusKey = statusKeyMap[status]
 
             // pick values from statusMap safely
-            const { icon, color, label } = statusKey && statusMap[statusKey] ? statusMap[statusKey] : '-'
-            const tooltipTitle = status === 'failed' ? row.original.error_message || 'Failed' : statusKey || 'Unknown'
+            // const { icon, color, label } = statusKey && statusMap[statusKey] ? statusMap[statusKey] : '-'
+
+            const statusInfo: StatusInfo | undefined =
+              statusKey && statusMap[statusKey] ? statusMap[statusKey] : undefined
+
+            const { icon, color, label } = statusInfo || { icon: null, color: 'default', label: '-' }
+
+            const tooltipTitle =
+              status === 'failed'
+                ? row.original.error_message || 'Failed'
+                : status === 'sending'
+                  ? 'Sent it'
+                  : statusKey || 'Unknown'
+
             return (
               <div className='flex items-center gap-2'>
                 <Tooltip title={tooltipTitle}>
@@ -385,7 +399,7 @@ const CampaignViewLogDialog = ({
           header: 'Scheduled At',
           cell: ({ row }) => {
             const raw = row.original.scheduled_at
-            const formatted = raw ? dayjs(raw).format('YYYY-MM-DD HH:mm') : '-'
+            const formatted = raw ? dayjs(raw).format('DD-MM-YYYY hh:mm A') : '-'
             return <Typography>{formatted}</Typography>
           }
         }),
@@ -393,7 +407,7 @@ const CampaignViewLogDialog = ({
           header: 'Sent At',
           cell: ({ row }) => {
             const raw = row.original.sent_at
-            const formatted = raw ? dayjs(raw).format('YYYY-MM-DD HH:mm') : '-'
+            const formatted = raw ? dayjs(raw).format('DD-MM-YYYY hh:mm A') : '-'
             return <Typography>{formatted}</Typography>
           }
         })
@@ -424,8 +438,7 @@ const CampaignViewLogDialog = ({
             const statusMap: Record<StatusType, StatusInfo> = {
               queued: { icon: 'ri-time-line', color: 'text-yellow-500', label: 'Queued' },
               sending: { icon: 'ri-send-plane-line', color: 'text-blue-500', label: 'Send' },
-              failed: { icon: 'ri-close-circle-line', color: 'text-red-500', label: 'Failed' },
-              opened: { icon: 'ri-mail-open-line', color: 'text-green-500', label: 'Opened' }
+              failed: { icon: 'ri-close-circle-line', color: 'text-red-500', label: 'Failed' }
             }
 
             const { icon, color, label } =
@@ -434,7 +447,12 @@ const CampaignViewLogDialog = ({
                 : { icon: 'ri-question-line', color: 'text-gray-500', label: row.original.status || 'Unknown' }
 
             const tooltipTitle =
-              status === 'failed' ? row.original.error_message || 'Failed' : row.original.status || 'Unknown'
+              status === 'failed'
+                ? row.original.error_message || 'Failed'
+                : status === 'sending'
+                  ? 'Sent it'
+                  : row.original.status || 'Unknown'
+
             return (
               <div className='flex items-center gap-2'>
                 <Tooltip title={tooltipTitle}>
@@ -451,15 +469,15 @@ const CampaignViewLogDialog = ({
           // cell: ({ row }) => <Typography>{row.original.scheduled_at ?? '-'}</Typography>
           cell: ({ row }) => {
             const raw = row.original.scheduled_at
-            const formatted = raw ? dayjs(raw).format('YYYY-MM-DD HH:mm') : '-'
+            const formatted = raw ? dayjs(raw).format('DD-MM-YYYY hh:mm A') : '-'
             return <Typography>{formatted}</Typography>
           }
         }),
-        columnHelper.accessor('sent_date', {
+        columnHelper.accessor('sent_at', {
           header: 'Send At',
           cell: ({ row }) => {
-            const raw = row.original.sent_date
-            const formatted = raw ? dayjs(raw).format('YYYY-MM-DD HH:mm') : '-'
+            const raw = row.original.sent_at
+            const formatted = raw ? dayjs(raw).format('DD-MM-YYYY hh:mm A') : '-'
             return <Typography>{formatted}</Typography>
           }
         })
@@ -587,7 +605,7 @@ const CampaignViewLogDialog = ({
           <div className='w-10 h-10 border-4 border-gray-300 border-t-blue-600 rounded-full animate-spin'></div>
         </div>
       )}
-      <DialogTitle className='flex flex-col gap-1 text-center'>
+      <DialogTitle className='flex flex-col gap-1 text-center !pb-0'>
         <span className='text-xl font-semibold'>Campaign Performance Logs ({channelMap[selectedChannel] || ''})</span>
         <hr className='my-2 border-t border-gray-300' />
 
@@ -607,39 +625,16 @@ const CampaignViewLogDialog = ({
               <i className='ri-mail-open-line' /> Open
             </div>
           )}
-          <p className='mt-2 text-xs text-gray-500 flex justify-center items-center gap-2'>
-            <i className='ri-information-line text-base' />
-            <span>
-              Tip: Hover the <b>Status</b> icon to see more details — for example, error reason on{' '}
-              <span className='text-red-500 font-medium'>Failed</span>
-              {selectedChannel === 'email' && ' or open time on Opened'}.
-            </span>
-          </p>
         </div>
 
         <div className='flex flex-col !items-start max-sm:w-full sm:flex-row sm:items-center gap-4'>
-          {/* <DebouncedInput
-            value={globalFilterLog ?? ''}
-            className='max-sm:w-full min-w-[220px]'
-            onChange={value => setGlobalFilterLog(String(value))}
-            placeholder='Search Announcement...'
-          /> */}
-          {/* <DebouncedInput
-            value={globalFilterLog ?? ''}
-            onEnter={val => {
-              setGlobalFilterLog(String(val))
-              // fetchUsers() // Enter press pe API call
-            }}
-            onChange={val => {
-              setGlobalFilterLog(String(val))
-              if (String(val).trim() === '') {
-                getNotificationViewLog()
-                getWhatsappViewLog()
-              }
-            }}
-            placeholder='Search User'
-            className='w-full'
-          /> */}
+          {/* Search inputs commented */}
+        </div>
+
+        {/* ✅ Professional Note */}
+        <div className='w-full bg-gray-100 border border-gray-300 text-gray-700 text-xs px-3 py-2 rounded-md text-left mt-2'>
+          <strong className='text-gray-800'>Note:</strong> Hover over the status in the table to view detailed
+          information (e.g. sent successfully, or failure reason).
         </div>
       </DialogTitle>
 
@@ -655,7 +650,7 @@ const CampaignViewLogDialog = ({
               columns={columns}
               count={count ?? 0}
               page={pagination.page ?? 0} // ensure 0-based for UI
-              rowsPerPage={pagination.perPage ?? 10}
+              rowsPerPage={pagination.perPage ?? 20}
               onPageChange={(_, newPage) => {
                 setPagination((prev: any) => ({ ...prev, page: newPage }))
               }}

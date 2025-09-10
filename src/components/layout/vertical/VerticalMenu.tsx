@@ -57,9 +57,9 @@ const RenderExpandIcon = ({ open, transitionDuration }: RenderExpandIconProps) =
 
 interface sidebarDataPermission {
   menus: {
-    menu_name: string;
-    checked: boolean;
-  }[];
+    menu_name: string
+    checked: boolean
+  }[]
   // other properties...
 }
 const VerticalMenu = ({ dictionary, scrollMenu }: Props) => {
@@ -67,7 +67,7 @@ const VerticalMenu = ({ dictionary, scrollMenu }: Props) => {
   const theme = useTheme()
   const verticalNavOptions = useVerticalNav()
   const params = useParams()
-  const dispatch = useDispatch();
+  const dispatch = useDispatch()
   // Vars
 
   const { isBreakpointReached, transitionDuration } = verticalNavOptions
@@ -81,23 +81,23 @@ const VerticalMenu = ({ dictionary, scrollMenu }: Props) => {
   const [permissionData, setpermissionData] = useState([])
   const [loading, setLoading] = useState(false)
 
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] = useState(false)
 
   useEffect(() => {
     const interval = setInterval(() => {
-      const continueUrl = localStorage.getItem('continue');
+      const continueUrl = localStorage.getItem('continue')
       if (continueUrl === '1') {
-        setOpen(true);
-        clearInterval(interval); // stop checking once triggered
+        setOpen(true)
+        clearInterval(interval) // stop checking once triggered
       }
-    }, 500); // check every 0.5 sec
+    }, 500) // check every 0.5 sec
 
-    return () => clearInterval(interval);
-  }, []);
+    return () => clearInterval(interval)
+  }, [])
 
   const hasMenuPermission = (menuName: string) => {
-    const menus = (permissions as unknown as sidebarDataPermission).menus || [];
-    return menus.find(p => p.menu_name === menuName && p.checked === true);
+    const menus = (permissions as unknown as sidebarDataPermission).menus || []
+    return menus.find(p => p.menu_name === menuName && p.checked === true)
   }
 
   // const fetchRolePermissionData = async () => {
@@ -114,52 +114,51 @@ const VerticalMenu = ({ dictionary, scrollMenu }: Props) => {
   // }
 
   useEffect(() => {
-    setLoading(true);
+    setLoading(true)
 
     const timeout = setTimeout(() => {
-      setLoading(false);
-    }, 500);
+      setLoading(false)
+    }, 500)
 
-    return () => clearTimeout(timeout);
-  }, [permissions]);
+    return () => clearTimeout(timeout)
+  }, [permissions])
 
   useEffect(() => {
     if (loginStore?.super_admin) {
+      setLoading(true)
+      const formData = new FormData()
+      formData.append('role_id', String(0))
+      formData.append('tenant_id', loginStore.tenant_id)
+      formData.append('school_id', loginStore.school_id)
+      formData.append('user_id', loginStore.id)
 
-      setLoading(true);
-      const formData = new FormData();
-      formData.append('role_id', String(0));
-      formData.append('tenant_id', loginStore.tenant_id);
-      formData.append('school_id', loginStore.school_id);
-      formData.append('user_id', loginStore.id);
-
-      api.post('get-role-permissions', formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data'
-        }
-      })
-        .then((res) => {
-          setpermissionData(res.data.menus || []); // optional chaining fallback
-          dispatch(setSidebarPermissionInfo(res.data || []));
-          setLoading(false);
+      api
+        .post('get-role-permissions', formData, {
+          headers: {
+            'Content-Type': 'multipart/form-data'
+          }
         })
-        .catch((err) => {
-          console.error('Error fetching role permissions:', err);
-          setLoading(false);
-        });
+        .then(res => {
+          setpermissionData(res.data.menus || []) // optional chaining fallback
+          dispatch(setSidebarPermissionInfo(res.data || []))
+          setLoading(false)
+        })
+        .catch(err => {
+          console.error('Error fetching role permissions:', err)
+          setLoading(false)
+        })
     }
-  }, [loginStore?.super_admin]);
+  }, [loginStore?.super_admin])
 
-  
   const refreshApi = async () => {
-     try {
-    const res = await api.post('auth/refresh');
-    saveToken(res.data.access_token);  
-    setOpen(false);        
-    window.location.reload();           
-    localStorage.removeItem('continue');
+    try {
+      const res = await api.post('auth/refresh')
+      saveToken(res.data.access_token)
+      setOpen(false)
+      window.location.reload()
+      localStorage.removeItem('continue')
     } catch (err) {
-      console.error('Refresh failed:', err);
+      console.error('Refresh failed:', err)
     }
   }
 
@@ -169,49 +168,45 @@ const VerticalMenu = ({ dictionary, scrollMenu }: Props) => {
     <ScrollWrapper
       {...(isBreakpointReached
         ? {
-          className: 'bs-full overflow-y-auto overflow-x-hidden',
-          onScroll: container => scrollMenu(container, false)
-        }
+            className: 'bs-full overflow-y-auto overflow-x-hidden',
+            onScroll: container => scrollMenu(container, false)
+          }
         : {
-          options: { wheelPropagation: false, suppressScrollX: true },
-          onScrollY: container => scrollMenu(container, true)
-        })}
+            options: { wheelPropagation: false, suppressScrollX: true },
+            onScrollY: container => scrollMenu(container, true)
+          })}
     >
       {/* {loading && <Loader />} */}
 
       {/* Incase you also want to scroll NavHeader to scroll with Vertical Menu, remove NavHeader from above and paste it below this comment */}
       {/* Vertical Menu */}
-      {open &&
-      <>
-         <Dialog fullWidth maxWidth='xs' open={open} onClose={() => setOpen(false)} closeAfterTransition={false}>
-           <DialogContent className='flex items-center flex-col text-center sm:pbs-16 sm:pbe-6 sm:pli-16'>
-             <i className='ri-error-warning-line text-[88px] mbe-6 text-warning' />
-               <Typography variant='h4'>
-                 Do you want to continue login?
-               </Typography>
-           </DialogContent>
-           <DialogActions className='justify-center pbs-0 sm:pbe-16 sm:pli-16'>
-             <Button variant='contained' 
-            onClick={refreshApi}
-            >
-              Yes
-            </Button>
-            <Button
-              variant='outlined'
-              color='secondary'
-              onClick={() => {
-                setOpen(false)
-                localStorage.removeItem('auth_token');
-                window.location.href = '/login';
-                localStorage.removeItem('continue');
-              }}
-            >
-              No
-            </Button>
-          </DialogActions>
-        </Dialog>
+      {open && (
+        <>
+          <Dialog fullWidth maxWidth='xs' open={open} onClose={() => setOpen(false)} closeAfterTransition={false}>
+            <DialogContent className='flex items-center flex-col text-center sm:pbs-16 sm:pbe-6 sm:pli-16'>
+              <i className='ri-error-warning-line text-[88px] mbe-6 text-warning' />
+              <Typography variant='h4'>Do you want to continue login?</Typography>
+            </DialogContent>
+            <DialogActions className='justify-center pbs-0 sm:pbe-16 sm:pli-16'>
+              <Button variant='contained' onClick={refreshApi}>
+                Yes
+              </Button>
+              <Button
+                variant='outlined'
+                color='secondary'
+                onClick={() => {
+                  setOpen(false)
+                  localStorage.removeItem('auth_token')
+                  window.location.href = '/login'
+                  localStorage.removeItem('continue')
+                }}
+              >
+                No
+              </Button>
+            </DialogActions>
+          </Dialog>
         </>
-      }
+      )}
       <Menu
         popoutMenuOffset={{ mainAxis: 17 }}
         menuItemStyles={menuItemStyles(verticalNavOptions, theme)}
@@ -262,11 +257,20 @@ const VerticalMenu = ({ dictionary, scrollMenu }: Props) => {
                     {dictionary['navigation'].roles}
                   </MenuItem>
                 )}
+                {hasMenuPermission('announcement') && (
+                  <MenuItem
+                    href={`/${locale}/apps/announcement`}
+                    icon={<i className='ri-speaker-line' />}
+                    exactMatch={false}
+                    activeUrl='/apps/announcement'
+                  >
+                    {dictionary['navigation'].announcements}
+                  </MenuItem>
+                )}
               </>
             )}
           </>
         )}
-
 
         {/* If super admin, use permissionData */}
         {loginStore.super_admin ? (
@@ -342,15 +346,11 @@ const VerticalMenu = ({ dictionary, scrollMenu }: Props) => {
           )
         ) : null}
 
-
-
-
         {/* {hasMenuPermission('profile') && ( */}
         {/* <MenuItem href={`/${locale}/pages/school-settings/`} icon={<i className='ri-settings-4-line ' />}>
           {dictionary['navigation'].editShcool}
         </MenuItem> */}
         {/* )} */}
-
 
         {/* <MenuItem
           href={`/${locale}/dashboards/academy`}
@@ -362,7 +362,6 @@ const VerticalMenu = ({ dictionary, scrollMenu }: Props) => {
         <MenuItem href={`/${locale}/apps/user/list`} icon={<i className='ri-user-line' />}>{dictionary['navigation'].user}</MenuItem>
         <MenuItem href={`/${locale}/apps/roles`} icon={<i className='ri-lock-2-line' />} >{dictionary['navigation'].roles}</MenuItem>
         <MenuItem href={`/${locale}/pages/school-settings/`} icon={<i className='ri-settings-4-line ' />} >{dictionary['navigation'].editShcool}</MenuItem> */}
-
 
         {/* <SubMenu label={dictionary['navigation'].rolesPermissions} icon={<i className='ri-lock-2-line' />}>
           <MenuItem href={`/${locale}/apps/roles`}>{dictionary['navigation'].roles}</MenuItem>

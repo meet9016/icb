@@ -33,6 +33,7 @@ import { useSettings } from '@/@core/hooks/useSettings'
 import CampaignViewLogDialog from '@/components/dialogs/campaign-view-log'
 import { useTheme } from '@emotion/react'
 import CustomAvatar from '@/@core/components/mui/Avatar'
+import dayjs from 'dayjs'
 
 declare module '@tanstack/table-core' {
   interface FilterFns {
@@ -263,11 +264,25 @@ const CampaignListPage = ({ tableData }: { tableData?: UsersType[] }) => {
       }),
       columnHelper.accessor('campaign_date', {
         header: 'campaign date',
-        cell: ({ row }) => <Typography>{row.original.campaign_date}</Typography>
+        cell: ({ row }) => {
+          const raw = row.original.campaign_date
+          const d = raw ? dayjs(raw) : null
+          const formatted = d && d.isValid() ? d.format('DD-MM-YYYY') : '-'
+          return <Typography>{formatted}</Typography>
+        }
       }),
       columnHelper.accessor('campaign_time', {
         header: 'campaign time',
-        cell: ({ row }) => <Typography>{row.original.campaign_time}</Typography>
+        // cell: ({ row }) => <Typography>{row.original.campaign_time}</Typography>
+        cell: ({ row }) => {
+          const raw = row.original.campaign_time
+          const formatted = raw
+            ? new Intl.DateTimeFormat('en-US', { hour: '2-digit', minute: '2-digit', hour12: true }).format(
+                new Date(`1970-01-01T${raw}`)
+              )
+            : '-'
+          return <Typography>{formatted}</Typography>
+        }
       }),
       columnHelper.accessor('frequency_count', {
         header: 'Repeat',
@@ -490,7 +505,7 @@ const CampaignListPage = ({ tableData }: { tableData?: UsersType[] }) => {
       formdata.append('page', (paginationWhatsapp.page + 1).toString())
       try {
         const res = await api.post(`${endPointApi.postcampaignWhatsappLogGet}`, formdata)
-        
+
         setViewWhatsappLog(res.data)
         setTotalRowsWhatsapp(res.data.total)
         setLoaderWpView(false)
@@ -723,7 +738,6 @@ const CampaignListPage = ({ tableData }: { tableData?: UsersType[] }) => {
           open={openDialog}
           setOpen={setOpenDialog}
           selectedChannel={channelName}
-
           setPaginationEmail={setPaginationEmail}
           setPaginationNotification={setPaginationNotification}
           setPaginationWhatsapp={setPaginationWhatsapp}
@@ -732,30 +746,24 @@ const CampaignListPage = ({ tableData }: { tableData?: UsersType[] }) => {
           paginationNotification={paginationNotification}
           paginationWhatsapp={paginationWhatsapp}
           paginationSms={paginationSms}
-
           loaderEmailView={loaderEmailView}
           loaderNotifiView={loaderNotifiView}
           loaderWpView={loaderWpView}
           loaderSmsView={loaderSmsView}
-
           viewLogData={viewEmailLog}
           viewNotificationLog={viewNotificationLog}
           viewWhatsappLog={viewWhatsappLog}
           viewSmsLog={viewSmsLog}
-
           totalRowsNotification={totalRowsNotification}
           totalRowsEmail={totalRowsEmail}
           totalRowWhatsapp={totalRowWhatsapp}
           totalRowsSms={totalRowsSms}
-
           setViewEmailLog={setViewEmailLog}
           setViewNotificationLog={setViewNotificationLog}
           setViewWhatsappLog={setViewWhatsappLog}
           setViewSmsLog={setViewSmsLog}
-
           setGlobalFilterLog={setGlobalFilterLog}
           globalFilterLog={globalFilterLog}
-
           getViewLog={getViewLog}
           getNotificationViewLog={getNotificationViewLog}
           getWhatsappViewLog={getWhatsappViewLog}
