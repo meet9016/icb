@@ -136,6 +136,7 @@ const FilterCampaign = ({
       [field]: value
     }))
   }
+
   const handleChangeTeacherForm = (field: string, value: any) => {
     setTeacherForm((prev: any) => ({
       ...prev,
@@ -150,10 +151,36 @@ const FilterCampaign = ({
     }))
   }
 
+  // map any display field to internal role key
+  const roleNameToKey = (opt: any) => {
+    const v = (opt?.role ?? opt?.value ?? opt?.name ?? opt?.label ?? '').toString().toLowerCase()
+    if (v === 'guardian' || v === 'parent') return 'parent'
+    if (v === 'student') return 'student'
+    if (v === 'teacher') return 'teacher'
+    return null
+  }
+
+  // build defaults for a role
+  const buildDefaultRowsForRole = (role: string) =>
+    (defaultRoleSelections[role] || []).map((id: string) => ({ id, role }))
+
+  // uniq by role:id
+  const uniqByRoleId = (items: { id: string; role: string }[]) => {
+    const seen = new Set<string>()
+    return items.filter(it => {
+      const key = `${it.role}:${it.id}`
+      if (seen.has(key)) return false
+      seen.add(key)
+      return true
+    })
+  }
+
   const handleFilterChangeDataLack = (newValues: any, reason: any, details: any) => {
     setSelectedLabelsDataLack(newValues)
+
+    // optional: if nothing is selected → reset all
     if (!newValues || newValues.length === 0) {
-      setSelectedData([])
+      setSelectedData([]) // or reset all forms
     }
     if (reason === 'removeOption' && details?.option?.name === 'Parent') {
       setParentForm({
@@ -212,6 +239,41 @@ const FilterCampaign = ({
         house: ''
       })
     }
+
+    // 1) Chip delete → MUI gives reason='removeOption' and details.option = removed item (usually)
+    if (reason === 'removeOption') {
+      const removedRole = roleNameToKey(details?.option)
+      if (removedRole) {
+        // Clear ONLY that role’s fields
+        setFilterWishSelectedLabelsDataLack?.((prev: { id: string; role: string }[]) =>
+          (prev || []).filter(x => x.role !== removedRole)
+        )
+      }
+    }
+
+    // 2) Selecting a role in dropdown → reason='selectOption'
+    //    Replace that role with defaults only
+    if (reason === 'selectOption') {
+      const addedRole = roleNameToKey(details?.option)
+      if (addedRole) {
+        setFilterWishSelectedLabelsDataLack?.((prev: { id: string; role: string }[]) => {
+          const others = (prev || []).filter(x => x.role !== addedRole)
+          const defaults = buildDefaultRowsForRole(addedRole)
+          return uniqByRoleId([...others, ...defaults])
+        })
+      }
+    }
+
+    // 3) Clear all (X or Backspace) → reason='clear'
+    if (reason === 'clear') {
+      // Rebuild defaults for whatever roles still visible in newValues
+      const rolesLeft: string[] = (newValues || []).map((o: any) => roleNameToKey(o)).filter(Boolean) as string[]
+
+      setFilterWishSelectedLabelsDataLack?.(() => {
+        const restored = rolesLeft.flatMap(r => buildDefaultRowsForRole(r!))
+        return uniqByRoleId(restored)
+      })
+    }
   }
 
   const array = [
@@ -247,7 +309,7 @@ const FilterCampaign = ({
 
   /** Role-wise default field keys (add synonyms you use) */
   const defaultRoleSelections: Record<string, string[]> = {
-    parent: ['email', 'm_phone1', 'mobile_1', 'm_phone2', 'mobile_2', 'phone_2', 'par_name'],
+    parent: ['email', 'm_phone1', 'm_phone2', 'par_name'],
     student: ['first_name', 'last_name', 'email', 'gender', 'mobile_phone'],
     teacher: ['first_name', 'gender', 'p_mobile', 'other_name', 'p_email']
   }
@@ -438,7 +500,7 @@ const FilterCampaign = ({
               {selectedLabelsDataLack.some((val: any) => val.id === 'student') && (
                 <>
                   <Box display='flex' alignItems='center' justifyContent='space-between' sx={{ mb: 2 }}>
-                    <Typography variant='h6' fontWeight={600} sx={{ mt: 2, mb: 2 }}>
+                    <Typography variant='h6' fontWeight={600} sx={{ mt: 4, mb: 4 }}>
                       Students
                     </Typography>
                     <Button variant='contained' onClick={clearStudentFilter}>
@@ -462,6 +524,7 @@ const FilterCampaign = ({
                           >
                             {field.filter_values.split(',').map((option: string, i: number) => (
                               <MenuItem key={i} value={option.trim()}>
+                                {/* {option.trim()} */}
                                 <Checkbox checked={(studentForm?.[field.id] || []).indexOf(option.trim()) > -1} />
                                 <ListItemText primary={option.trim()} />
                               </MenuItem>
@@ -493,7 +556,7 @@ const FilterCampaign = ({
               {selectedLabelsDataLack.some((val: any) => val.id === 'parent') && (
                 <>
                   <Box display='flex' alignItems='center' justifyContent='space-between' sx={{ mb: 2 }}>
-                    <Typography variant='h6' fontWeight={600} sx={{ mt: 2, mb: 2 }}>
+                    <Typography variant='h6' fontWeight={600} sx={{ mt: 4, mb: 4 }}>
                       Parents
                     </Typography>
                     <Button variant='contained' onClick={clearParentFilter}>
@@ -506,65 +569,6 @@ const FilterCampaign = ({
                         {/* {console.log('field.filter_values', field.filter_values)} */}
 
                         {field.filter_values !== null ? (
-                          // <TextField
-                          //   label={field.name}
-                          //   select
-                          //   fullWidth
-                          //   value={parentForm?.[field.id] || []}
-                          //   onChange={e => handleChangeParentColumnFilter(field.id, e.target.value)}
-                          //   SelectProps={{
-                          //     multiple: true,
-                          //     renderValue: (selected: any) => {
-                          //       // if JSON options → map ids back to labels
-                          //       try {
-                          //         const parsed = JSON.parse(field.filter_values)
-                          //         if (Array.isArray(parsed)) {
-                          //           return selected
-                          //             .map((sel: any) => {
-                          //               const match = parsed.find((opt: any) => opt.contact_type === sel)
-                          //               return match ? match.contact_desc : sel
-                          //             })
-                          //             .join(', ')
-                          //         }
-                          //       } catch {
-                          //         // fallback for comma-separated values
-                          //       }
-                          //       return selected.join(', ')
-                          //     }
-                          //   }}
-                          // >
-                          //   {(() => {
-                          //     let options: any[] = []
-                          //     try {
-                          //       const parsed = JSON.parse(field.filter_values)
-                          //       if (
-                          //         Array.isArray(parsed) &&
-                          //         parsed.every(opt => opt.contact_type && opt.contact_desc)
-                          //       ) {
-                          //         options = parsed.map((opt: any) => ({
-                          //           value: opt.contact_type,
-                          //           label: opt.contact_desc
-                          //         }))
-                          //       } else {
-                          //         options = field.filter_values.split(',').map((opt: string) => ({
-                          //           value: opt.trim(),
-                          //           label: opt.trim()
-                          //         }))
-                          //       }
-                          //     } catch {
-                          //       options = field.filter_values.split(',').map((opt: string) => ({
-                          //         value: opt.trim(),
-                          //         label: opt.trim()
-                          //       }))
-                          //     }
-
-                          //     return options.map((opt, i) => (
-                          //       <MenuItem key={i} value={opt.value}>
-                          //         {opt.label}
-                          //       </MenuItem>
-                          //     ))
-                          //   })()}
-                          // </TextField>
                           <TextField
                             label={field.name}
                             select
@@ -574,6 +578,7 @@ const FilterCampaign = ({
                             SelectProps={{
                               multiple: true,
                               renderValue: (selected: any) => {
+                                // if JSON options → map ids back to labels
                                 try {
                                   const parsed = JSON.parse(field.filter_values)
                                   if (Array.isArray(parsed)) {
@@ -584,7 +589,9 @@ const FilterCampaign = ({
                                       })
                                       .join(', ')
                                   }
-                                } catch {}
+                                } catch {
+                                  // fallback for comma-separated values
+                                }
                                 return selected.join(', ')
                               }
                             }}
@@ -616,6 +623,7 @@ const FilterCampaign = ({
 
                               return options.map((opt, i) => (
                                 <MenuItem key={i} value={opt.value}>
+                                  {/* {opt.label} */}
                                   <Checkbox checked={(parentForm?.[field.id] || []).indexOf(opt.value) > -1} />
                                   <ListItemText primary={opt.label} />
                                 </MenuItem>
@@ -638,7 +646,7 @@ const FilterCampaign = ({
               {selectedLabelsDataLack.some((val: any) => val.id === 'teacher') && (
                 <>
                   <Box display='flex' alignItems='center' justifyContent='space-between' sx={{ mb: 2 }}>
-                    <Typography variant='h6' fontWeight={600} sx={{ mt: 2, mb: 2 }}>
+                    <Typography variant='h6' fontWeight={600} sx={{ mt: 4, mb: 4 }}>
                       Teachers
                     </Typography>
                     <Button variant='contained' onClick={clearTeacherFilter}>
@@ -662,6 +670,7 @@ const FilterCampaign = ({
                           >
                             {field.filter_values.split(',').map((option: string, i: number) => (
                               <MenuItem key={i} value={option.trim()}>
+                                {/* {option.trim()} */}
                                 <Checkbox checked={(teacherForm?.[field.id] || []).indexOf(option.trim()) > -1} />
                                 <ListItemText primary={option.trim()} />
                               </MenuItem>

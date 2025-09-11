@@ -120,54 +120,61 @@ const ReactTable = ({
   })
 
   return (
-    <Card>
-      <div className='overflow-x-auto'>
-          <table className={styles.table}>
-            <thead>
-              {table.getHeaderGroups().map(headerGroup => (
-                <tr key={headerGroup.id}>
-                  {headerGroup.headers.map(header => (
-                    <th key={header.id} className='h-[42px] text-xs'>
-                      {!header.isPlaceholder && (
-                        <div className='justify-center items-center' onClick={header.column.getToggleSortingHandler()}>
-                          {flexRender(header.column.columnDef.header, header.getContext())}
-                        </div>
-                      )}
-                    </th>
+    <Card className='flex flex-col h-[600px]'>
+      <div className='flex-1 overflow-y-auto'>
+        <table className={`${styles.table} w-full`}>
+          <thead className='sticky top-0 bg-white z-20 shadow-sm'>
+            {table.getHeaderGroups().map(headerGroup => (
+              <tr key={headerGroup.id}>
+                {headerGroup.headers.map(header => (
+                  <th key={header.id} className='h-[42px] text-xs px-2 py-1'>
+                    {!header.isPlaceholder && (
+                      <div
+                        className='flex justify-center items-center'
+                        onClick={header.column.getToggleSortingHandler()}
+                      >
+                        {flexRender(header.column.columnDef.header, header.getContext())}
+                      </div>
+                    )}
+                  </th>
+                ))}
+              </tr>
+            ))}
+          </thead>
+          <tbody>
+            {table.getFilteredRowModel().rows.length === 0 ? (
+              <tr>
+                <td colSpan={table.getAllColumns().length} className='text-center py-4'>
+                  No data available
+                </td>
+              </tr>
+            ) : (
+              table.getRowModel().rows.map(row => (
+                <tr key={row.id}>
+                  {row.getVisibleCells().map(cell => (
+                    <td key={cell.id} className='px-2 py-1'>
+                      {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                    </td>
                   ))}
                 </tr>
-              ))}
-            </thead>
-            <tbody>
-              {table.getFilteredRowModel().rows.length === 0 ? (
-                <tr>
-                  <td colSpan={table.getAllColumns().length} className='text-center'>
-                    No data available
-                  </td>
-                </tr>
-              ) : (
-                table.getRowModel().rows.map(row => (
-                  <tr key={row.id}>
-                    {row.getVisibleCells().map(cell => (
-                      <td key={cell.id}>{flexRender(cell.column.columnDef.cell, cell.getContext())}</td>
-                    ))}
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
+              ))
+            )}
+          </tbody>
+        </table>
       </div>
-      <TablePagination
-        component='div'
-        className={className}
-        count={count}
-        page={page}
-        rowsPerPage={rowsPerPage}
-        rowsPerPageOptions={rowsPerPageOptions}
-        SelectProps={{ inputProps: { 'aria-label': 'rows per page' } }}
-        onPageChange={onPageChange}
-        onRowsPerPageChange={e => onRowsPerPageChange(Number((e.target as HTMLInputElement).value))}
-      />
+      <div className='sticky bottom-0 bg-white border-t z-20'>
+        <TablePagination
+          component='div'
+          className={className}
+          count={count}
+          page={page}
+          rowsPerPage={rowsPerPage}
+          rowsPerPageOptions={rowsPerPageOptions}
+          SelectProps={{ inputProps: { 'aria-label': 'rows per page' } }}
+          onPageChange={onPageChange}
+          onRowsPerPageChange={e => onRowsPerPageChange(Number((e.target as HTMLInputElement).value))}
+        />
+      </div>
     </Card>
   )
 }

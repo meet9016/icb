@@ -67,6 +67,7 @@ const CreateCampaign = () => {
   const [filterWishDataLack, setFilterWishDataLack] = useState<RoleOption[]>([])
   const [filterWishSelectedLabelsDataLack, setFilterWishSelectedLabelsDataLack] = useState([])
   const [filterWishCommonColumn, setFilterWishCommonColumn] = useState(['f_name', 'email', 'l_name', 'phone'])
+console.log("filterWishSelectedLabelsDataLack",filterWishSelectedLabelsDataLack);
 
   const [selectedIds, setSelectedIds] = useState([])
   const [status, setStatus] = useState('One Time')
@@ -79,7 +80,6 @@ const CreateCampaign = () => {
   const [selectedLabels, setSelectedLabels] = useState([])
   const [openDialog, setOpenDialog] = useState(false)
   const [openChart, setOpenChart] = useState(false)
-console.log("selectedIds",selectedIds);
 
   const [viewEmailLog, setViewEmailLog] = useState([])
 
@@ -759,6 +759,7 @@ console.log("selectedIds",selectedIds);
       }
     } catch (err: any) {
       console.error('Error fetching data:', err)
+      toast.error(err.message)
     } finally {
       setisLoading(false)
     }
@@ -952,22 +953,22 @@ console.log("selectedIds",selectedIds);
               </Grid>
             </Grid>
           ) : (
-          <TextField
-            label='Campaign title'
-            placeholder='Campaign title.....'
-            value={note}
-            onChange={e => {
-              if (e.target.value?.length <= 100) {
-                setNote(e.target.value)
-              }
-            }}
-            fullWidth
-            multiline
-            minRows={1}
-            error={note?.length > 100}
-            helperText={`${note?.length || 0}/100 characters`}
-          />
-           )}
+            <TextField
+              label='Campaign title'
+              placeholder='Campaign title.....'
+              value={note}
+              onChange={e => {
+                if (e.target.value?.length <= 100) {
+                  setNote(e.target.value)
+                }
+              }}
+              fullWidth
+              multiline
+              minRows={1}
+              error={note?.length > 100}
+              helperText={`${note?.length || 0}/100 characters`}
+            />
+          )}
           {/* Icon positioned at bottom right */}
           <Box
             position='absolute'

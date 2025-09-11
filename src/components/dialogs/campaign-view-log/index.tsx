@@ -241,7 +241,7 @@ const CampaignViewLogDialog = ({
                   : row.original.status || 'Unknown'
 
             return (
-              <div className='flex items-center gap-2'>
+              <div className='flex items-center gap-2 cursor-pointer'>
                 <Tooltip title={tooltipTitle}>
                   <span className={`flex items-center justify-center w-7 h-7 rounded-full bg-gray-100 ${color}`}>
                     <i className={`${icon} text-lg`} />
@@ -259,11 +259,12 @@ const CampaignViewLogDialog = ({
             return <Typography>{formatted}</Typography>
           }
         }),
-        columnHelper.accessor('sent_date', {
+        columnHelper.accessor('sent_at', {
           header: 'Sent At',
           cell: ({ row }) => {
-            const { sent_date, sent_time } = row.original
-            return <Typography>{sent_time ? `${sent_date ?? ''} ${sent_time.slice(0, 5)}`.trim() : '-'}</Typography>
+            const raw = row.original.sent_at
+            const formatted = raw ? dayjs(raw).format('DD-MM-YYYY hh:mm A') : '-'
+            return <Typography>{formatted}</Typography>
           }
         }),
         // columnHelper.accessor('sent_time', {
@@ -308,7 +309,7 @@ const CampaignViewLogDialog = ({
                   : row.original.status || 'Unknown'
 
             return (
-              <div className='flex items-center gap-2'>
+              <div className='flex items-center gap-2 cursor-pointer'>
                 <Tooltip title={tooltipTitle}>
                   <span className={`flex items-center justify-center w-7 h-7 rounded-full bg-gray-100 ${color}`}>
                     <i className={`${icon} text-lg`} />
@@ -380,12 +381,12 @@ const CampaignViewLogDialog = ({
             const tooltipTitle =
               status === 'failed'
                 ? row.original.error_message || 'Failed'
-                : status === 'sending'
+                : status == 1
                   ? 'Sent it'
                   : statusKey || 'Unknown'
 
             return (
-              <div className='flex items-center gap-2'>
+              <div className='flex items-center gap-2 cursor-pointer'>
                 <Tooltip title={tooltipTitle}>
                   <span className={`flex items-center justify-center w-7 h-7 rounded-full bg-gray-100 ${color}`}>
                     <i className={`${icon} text-lg`} />
@@ -454,7 +455,7 @@ const CampaignViewLogDialog = ({
                   : row.original.status || 'Unknown'
 
             return (
-              <div className='flex items-center gap-2'>
+              <div className='flex items-center gap-2 cursor-pointer'>
                 <Tooltip title={tooltipTitle}>
                   <span className={`flex items-center justify-center w-7 h-7 rounded-full bg-gray-100 ${color}`}>
                     <i className={`${icon} text-lg`} />
@@ -639,7 +640,7 @@ const CampaignViewLogDialog = ({
       </DialogTitle>
 
       <form onSubmit={handleSubmit}>
-        <DialogContent className='overflow-auto  max-h-[500px]'>
+        <DialogContent className='overflow-auto'>
           <IconButton onClick={handleClose} className='absolute top-4 right-4'>
             <i className='ri-close-line text-textSecondary' />
           </IconButton>
@@ -657,6 +658,7 @@ const CampaignViewLogDialog = ({
               onRowsPerPageChange={newSize => {
                 setPagination({ page: 0, perPage: newSize })
               }}
+              tableContainerClassName="max-h-[400px] overflow-y-auto" 
             />
           </div>
         </DialogContent>

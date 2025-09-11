@@ -48,6 +48,13 @@ export interface Props {
   paginationDatalack: any
 }
 
+type RoleKey = 'student' | 'parent' | 'teacher'
+
+type SelectRowBuckets = {
+  student: string[]
+  parent: string[]
+  teacher: string[]
+}
 const theme = themeQuartz
   .withParams(
     {
@@ -154,7 +161,15 @@ const AudienceGrid = ({
   const toTitle = (s: string) => s.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase())
 
   // exclude some fields
-  const EXCLUDED = new Set(['guardian_id', 'student_id', 'check', 'user_id', 'table_id', 'source_table', 'contact_type'])
+  const EXCLUDED = new Set([
+    'guardian_id',
+    'student_id',
+    'check',
+    'user_id',
+    'table_id',
+    'source_table',
+    'contact_type'
+  ])
 
   // mapping for specific field headers
   const HEADER_MAP: Record<string, string> = {
@@ -215,19 +230,19 @@ const AudienceGrid = ({
     setSelectRowId(merged)
   }
 
-  // ✅ per-grid selection change that merges with others
+  // user_id get
   const onSelectionChangedFactory = (role: string) => (params: any) => {
     const nodes = params.api.getSelectedNodes()
     const ids = nodes.map((n: any) => n.data.id ?? n.data.user_id)
-    // const ids = nodes.map((n: any) => n.data.id ?? n.data.guardian_id)
-    console.log("ids",nodes);
-    
+
     selectedIdsByRoleRef.current[role] = ids
 
     const merged = Object.values(selectedIdsByRoleRef.current).flat()
     setSelectedIds(merged)
     setSelectRowId(merged)
   }
+
+
 
   // 1) Stamp each row with a stable, per-grid unique key based on index
   const withStableKeys = (role: string, rows: any[]) =>
@@ -278,7 +293,17 @@ const AudienceGrid = ({
               </div>
             </div>
           </div>
-        ) : null
+        ) : (
+          <div key={role} className='rounded-lg border bg-white shadow-sm mb-4'>
+            <div className='px-4 py-3 border-b flex items-center justify-between'>
+              <h3 className='text-base font-semibold'>{toTitle(role === 'guardian' ? 'Parent' : (role as string))}</h3>
+            </div>
+
+            <div className='p-4 text-center text-gray-500'>
+              No data found for {role === 'guardian' ? 'Parents' : role}.
+            </div>
+          </div>
+        )
       )}
     </>
   )
