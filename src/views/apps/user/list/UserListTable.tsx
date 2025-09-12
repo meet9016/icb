@@ -653,8 +653,8 @@ const UserListTable = ({ tableData }: { tableData?: UsersType[] }) => {
         }
       })
 
-      if (response.data.status === 'success') {
-        toast.success('Users synced successfully')
+      if (response.status == 200) {
+        toast.success(response.data.message || 'Users synced successfully')
         fetchUsers()
       }
     } catch (error: any) {

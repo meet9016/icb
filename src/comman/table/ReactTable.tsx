@@ -152,7 +152,7 @@ const ReactTable = ({
               table.getRowModel().rows.map(row => (
                 <tr key={row.id}>
                   {row.getVisibleCells().map(cell => (
-                    <td key={cell.id} className='px-2 py-1'>
+                    <td key={cell.id} className='px-10 py-1'>
                       {flexRender(cell.column.columnDef.cell, cell.getContext())}
                     </td>
                   ))}
@@ -162,7 +162,7 @@ const ReactTable = ({
           </tbody>
         </table>
       </div>
-      <div className='sticky bottom-0 bg-white border-t z-20'>
+      <div className='sticky bottom-0 border-t z-20'>
         <TablePagination
           component='div'
           className={className}

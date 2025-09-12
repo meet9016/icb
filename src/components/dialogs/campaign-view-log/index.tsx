@@ -1,8 +1,7 @@
 'use client'
 
 import { useState, useEffect, useMemo } from 'react'
-import { useDispatch, useSelector } from 'react-redux'
-import { AppDispatch } from '@/redux-store'
+import { useSelector } from 'react-redux'
 
 import {
   Dialog,
@@ -11,12 +10,6 @@ import {
   Typography,
   IconButton,
   TextField,
-  Checkbox,
-  FormGroup,
-  FormControlLabel,
-  DialogActions,
-  Button,
-  LinearProgress,
   Tooltip,
   TextFieldProps
 } from '@mui/material'
@@ -65,9 +58,6 @@ type CampaignDialogProps = {
 
   setGlobalFilter: any
   globalFilter: any
-
-  getNotificationViewLog: any
-  getWhatsappViewLog: any
 }
 type ErrorType = {
   message: string[]
@@ -145,12 +135,6 @@ const CampaignViewLogDialog = ({
   loaderNotifiView,
   loaderWpView,
   loaderSmsView,
-
-  setGlobalFilterLog,
-  globalFilterLog,
-
-  getNotificationViewLog,
-  getWhatsappViewLog
 }: CampaignDialogProps) => {
   const [selectedCheckbox, setSelectedCheckbox] = useState<string[]>([])
   const [roleName, setRoleName] = useState<string>('')

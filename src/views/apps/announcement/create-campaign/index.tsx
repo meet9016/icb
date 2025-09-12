@@ -45,6 +45,10 @@ import FilterCampaign from './FilterCampaign'
 import { email } from 'valibot'
 import LocalAudienceGrid from './LocalAudienceGrid'
 
+type Role = {
+  id: any;
+  name: string;
+};
 const CreateCampaign = () => {
   const router = useRouter()
   const { lang: locale } = useParams()
@@ -63,11 +67,11 @@ const CreateCampaign = () => {
   const [startDateTime, setStartDateTime] = useState<Dayjs | null>(dayjs())
   //dataLack
   const [rolesListDataLack, setRolesListDataLack] = useState<RoleOption[]>([])
-  const [selectedLabelsDataLack, setSelectedLabelsDataLack] = useState([])
+  const [selectedLabelsDataLack, setSelectedLabelsDataLack] = useState<Role[]>([]);
+
   const [filterWishDataLack, setFilterWishDataLack] = useState<RoleOption[]>([])
   const [filterWishSelectedLabelsDataLack, setFilterWishSelectedLabelsDataLack] = useState([])
   const [filterWishCommonColumn, setFilterWishCommonColumn] = useState(['f_name', 'email', 'l_name', 'phone'])
-console.log("filterWishSelectedLabelsDataLack",filterWishSelectedLabelsDataLack);
 
   const [selectedIds, setSelectedIds] = useState([])
   const [status, setStatus] = useState('One Time')
@@ -94,11 +98,6 @@ console.log("filterWishSelectedLabelsDataLack",filterWishSelectedLabelsDataLack)
 
   //filterEdittime
   const [filterWishSelectedRole, setFilterWishSelectedRole] = useState<RoleOption[]>([])
-
-  const [paginationInfoLog, setPaginationInfoLog] = useState({
-    page: 0,
-    perPage: 20
-  })
 
   // Email
   const [paginationEmail, setPaginationEmail] = useState({ page: 0, perPage: 20 })
@@ -183,33 +182,6 @@ console.log("filterWishSelectedLabelsDataLack",filterWishSelectedLabelsDataLack)
     house: ''
   })
 
-  const [paginationDatalack, setPaginationDatalack] = useState(100)
-  const data12 = [
-    {
-      id: 'email',
-      role: 'parent'
-    },
-    {
-      id: 'email',
-      role: 'student'
-    },
-    {
-      id: 'first_name',
-      role: 'student'
-    },
-    {
-      id: 'gender',
-      role: 'student'
-    },
-    {
-      id: 'last_name',
-      role: 'student'
-    },
-    {
-      id: 'mobile_phone',
-      role: 'student'
-    }
-  ]
   const isRecurring = mode === 'recurring'
 
   const channels = [
@@ -464,13 +436,13 @@ console.log("filterWishSelectedLabelsDataLack",filterWishSelectedLabelsDataLack)
 
         // apply prefilled states
         if (Object.keys(initialParentForm).length) {
-          setParentForm(prev => ({ ...prev, ...initialParentForm }))
+          setParentForm((prev: any) => ({ ...prev, ...initialParentForm }))
         }
         if (Object.keys(initialStudentForm).length) {
-          setStudentForm(prev => ({ ...prev, ...initialStudentForm }))
+          setStudentForm((prev: any) => ({ ...prev, ...initialStudentForm }))
         }
         if (Object.keys(initialTeacherForm).length) {
-          setTeacherForm(prev => ({ ...prev, ...initialTeacherForm }))
+          setTeacherForm((prev: any) => ({ ...prev, ...initialTeacherForm }))
         }
 
         setFilterWishDataLack(allFilters)
@@ -524,7 +496,7 @@ console.log("filterWishSelectedLabelsDataLack",filterWishSelectedLabelsDataLack)
         // If you need it for anything else later:
         // const formatted2 = toIdNameArray2(res?.data?.column_name);
         console.log('res?.data?.users', res?.data?.users)
-        if (connection?.connectDataLack == 0) {
+        if (Number(connection?.connectDataLack) === 0) {
           setSelectedData(res?.data?.users || [])
         }
         const combinedDateTime = `${res?.data?.campaign_date} ${res?.data?.campaign_time}`
@@ -749,7 +721,6 @@ console.log("filterWishSelectedLabelsDataLack",filterWishSelectedLabelsDataLack)
 
       if (res.data.status === 'success') {
         setSelectedData(res.data.data)
-        setPaginationDatalack(res.data.pagination)
       } else {
         console.warn('Unexpected response:', res.data)
         // setFilterWishSelectedLabelsDataLack([])
@@ -1022,17 +993,15 @@ console.log("filterWishSelectedLabelsDataLack",filterWishSelectedLabelsDataLack)
       />
       {/* <Card sx={{ mt: 4 }}> */}
       <Box mt={4}>
-        {connectDataLack == 0 ? (
+        {Number(connectDataLack) == 0 ? (
           <LocalAudienceGrid selectedData={selectedData} setSelectedIds={setSelectedIds} />
         ) : (
           <AudienceGrid
             selectedData={selectedData}
             setSelectedIds={setSelectedIds}
-            connectDataLack={connectDataLack}
-            selectedLabelsDataLack={selectedLabelsDataLack}
             setSelectRowId={setSelectRowId}
             selectRowId={selectRowId}
-            paginationDatalack={paginationDatalack}
+            filterWishSelectedLabelsDataLack={filterWishSelectedLabelsDataLack}
           />
         )}
       </Box>
@@ -1227,7 +1196,8 @@ console.log("filterWishSelectedLabelsDataLack",filterWishSelectedLabelsDataLack)
           {/* Preview */}
           {/* {scheduleType === 'schedule' && ( */}
           <Grid item xs={12} mb={2}>
-            <Box sx={{ background: '#f4f6f8', p: 2, borderRadius: 2 }}>
+            {/* <Box sx={{ background: '#f4f6f8', p: 2, borderRadius: 2 }}> */}
+            <Card sx={{ p: 2 }}>
               <Typography variant='subtitle1' fontWeight='600'>
                 Preview:
               </Typography>
@@ -1344,7 +1314,8 @@ console.log("filterWishSelectedLabelsDataLack",filterWishSelectedLabelsDataLack)
                   </ul>
                 </div>
               )}
-            </Box>
+            </Card>
+            {/* </Box> */}
           </Grid>
           {/* )} */}
 
@@ -1432,8 +1403,6 @@ console.log("filterWishSelectedLabelsDataLack",filterWishSelectedLabelsDataLack)
           selectedChannel={selectedChannel}
           viewLogData={viewEmailLog}
           viewNotificationLog={viewNotificationLog}
-          paginationInfoLog={paginationInfoLog}
-          setPaginationInfoLog={setPaginationInfoLog}
           setPaginationEmail={setPaginationEmail}
           setPaginationNotification={setPaginationNotification}
           totalRowsNotification={totalRowsNotification}

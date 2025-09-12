@@ -31,7 +31,6 @@ import { Locale } from '@/configs/i18n'
 import { toast } from 'react-toastify'
 import { useSettings } from '@/@core/hooks/useSettings'
 import CampaignViewLogDialog from '@/components/dialogs/campaign-view-log'
-import { useTheme } from '@emotion/react'
 import CustomAvatar from '@/@core/components/mui/Avatar'
 import dayjs from 'dayjs'
 
@@ -240,12 +239,14 @@ const CampaignListPage = ({ tableData }: { tableData?: UsersType[] }) => {
             }
           }
 
-          const display = statusDisplay[status] || {
-            icon: '',
-            colorClass: '',
-            label: status || 'Unknown'
-          }
-
+          const display =
+            status && statusDisplay[status]
+              ? statusDisplay[status]
+              : {
+                  icon: '',
+                  colorClass: '',
+                  label: status || 'Unknown'
+                }
           return (
             <div className='flex items-center gap-2'>
               <i className={`${display.icon} ${display.colorClass} ${display.animate ? 'animate-spin' : ''}`} />
@@ -308,7 +309,7 @@ const CampaignListPage = ({ tableData }: { tableData?: UsersType[] }) => {
                   disabled={row.original.campaign_status_name === 'Done'}
                   onClick={() =>
                     router.push(
-                      `${getLocalizedUrl('/apps/announcement/add-campaign', locale as Locale)}?id=${encodeURIComponent(btoa(row.original.id))}`
+                      `${getLocalizedUrl('/apps/announcement/add-campaign', locale as Locale)}?id=${encodeURIComponent(btoa(String(row.original.id)))}`
                     )
                   }
                 >
@@ -321,7 +322,7 @@ const CampaignListPage = ({ tableData }: { tableData?: UsersType[] }) => {
                   onClick={() => {
                     setOpenDialog(true)
                     setChannelName(row.original.channels)
-                    setViewLogId(row.original.id)
+                    setViewLogId(row.original.id as string);
                   }}
                 >
                   <i className='ri-eye-line' style={{ color: '' }} />
@@ -762,7 +763,6 @@ const CampaignListPage = ({ tableData }: { tableData?: UsersType[] }) => {
           setViewNotificationLog={setViewNotificationLog}
           setViewWhatsappLog={setViewWhatsappLog}
           setViewSmsLog={setViewSmsLog}
-          setGlobalFilterLog={setGlobalFilterLog}
           globalFilterLog={globalFilterLog}
           getViewLog={getViewLog}
           getNotificationViewLog={getNotificationViewLog}

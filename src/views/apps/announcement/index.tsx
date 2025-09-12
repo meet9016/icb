@@ -250,7 +250,7 @@ const AnnouncementListPage = ({ tableData }: { tableData?: UsersType[] }) => {
                       if (row?.original?.id) {
                         router.replace(
                           getLocalizedUrl(
-                            `/apps/announcement/campaign?campaignId=${encodeURIComponent(btoa(row.original.id))}`,
+                            `/apps/announcement/campaign?campaignId=${encodeURIComponent(btoa(String(row.original.id)))}`,
                             locale as Locale
                           )
                         )
@@ -276,7 +276,7 @@ const AnnouncementListPage = ({ tableData }: { tableData?: UsersType[] }) => {
                   <IconButton
                     size='small'
                     onClick={() => handleDeleteClick(Number(row.original.id))}
-                    disabled={Number(row.original.status) == 3 || row.original.total_campaigns > 0}
+                    disabled={Number(row.original.status) == 3 || (row.original.total_campaigns ?? 0) > 0}
                   >
                     <i className='ri-delete-bin-7-line text-red-600' />
                   </IconButton>

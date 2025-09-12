@@ -32,6 +32,7 @@ import {
   studentStatusDropDown,
   yearGroupDropDown
 } from '@/comman/dropdownOptions/DropdownOptions'
+import { useSettings } from '@/@core/hooks/useSettings'
 
 export interface Props {
   roleLoading: boolean
@@ -97,6 +98,7 @@ const FilterCampaign = ({
   //     prev.includes(id) ? prev.filter((item: any) => item !== id) : [...prev, id]
   //   )
   // }
+  const { settings } = useSettings()
 
   const handleSelectCommonColumn = (id: string) => {
     setFilterWishCommonColumn((prev: any) =>
@@ -109,10 +111,10 @@ const FilterCampaign = ({
 
   // toggle selection scoped by BOTH id and role
   const handleSelect = (id: number, roleName: string) => {
-    setFilterWishSelectedLabelsDataLack(prev => {
-      const idx = prev.findIndex(x => x.id === id && x.role === roleName)
+    setFilterWishSelectedLabelsDataLack((prev: any) => {
+      const idx = prev.findIndex((x: any) => x.id === id && x.role === roleName)
       if (idx !== -1) {
-        return prev.filter((_, i) => i !== idx)
+        return prev.filter((_: any, i: number) => i !== idx)
       }
       return [...prev, { id, role: roleName }]
     })
@@ -886,10 +888,17 @@ const FilterCampaign = ({
                                 px: 1.5,
                                 py: 0.5,
                                 fontSize: '0.85rem',
-                                fontWeight: 500,
+                                fontWeight: 400,
                                 borderColor: roleColor,
                                 backgroundColor: isSelected ? roleColor : 'transparent',
-                                color: isSelected ? '#5c5a5aff' : '#696767ff',
+                                color:
+                                  settings.mode === 'light'
+                                    ? isSelected
+                                      ? '#676a7b'
+                                      : '#676a7b'
+                                    : isSelected
+                                      ? '#eaeaff8c'
+                                      : '#eaeaff8c',
                                 '&:hover': {
                                   backgroundColor: isSelected ? roleColor : `${roleColor}20`
                                 }

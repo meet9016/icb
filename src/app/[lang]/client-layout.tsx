@@ -75,7 +75,7 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
     console.log("hostNameParts",hostNameParts); 
     
     // const hostNameData = hostNameParts.length > 2 ? 'icbrisbane' : 'icbmyschool';
-    const hostNameData = hostNameParts.length > 2 ? hostNameParts[0] : 'icbmyschool';
+    const hostNameData = hostNameParts.length > 2 ? hostNameParts[0] : 'stagesapp';
     const baseURL = process.env.NEXT_PUBLIC_APP_URL;
     
     if (!baseURL) {

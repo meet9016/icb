@@ -8,6 +8,10 @@ import {
   RowSelectionModule,
   ValidationModule,
   PaginationModule,
+  colorSchemeDarkBlue,
+  colorSchemeDarkWarm,
+  colorSchemeLightCold,
+  colorSchemeLightWarm,
   themeQuartz,
   ColDef,
   GetRowIdParams
@@ -23,6 +27,8 @@ import { ModuleRegistry } from 'ag-grid-community'
 import { RowApiModule } from 'ag-grid-community'
 import { IconButton, Switch, Tooltip } from '@mui/material'
 import { useSettings } from '@/@core/hooks/useSettings'
+import themeConfig from '@configs/themeConfig'
+
 // Register required AG Grid modules
 ModuleRegistry.registerModules([
   QuickFilterModule,
@@ -38,14 +44,15 @@ ModuleRegistry.registerModules([
   ...(process.env.NODE_ENV !== 'production' ? [ValidationModule] : [])
 ])
 
+const themeLightCold = themeQuartz.withPart(colorSchemeLightCold)
+const themeDarkBlue = themeQuartz.withPart(colorSchemeDarkBlue)
+
 export interface Props {
   setSelectedIds: any
   selectedData: any
-  connectDataLack: any
-  selectedLabelsDataLack: any
   setSelectRowId: any
   selectRowId: any
-  paginationDatalack: any
+  filterWishSelectedLabelsDataLack: any
 }
 
 type RoleKey = 'student' | 'parent' | 'teacher'
@@ -76,12 +83,12 @@ const theme = themeQuartz
 const AudienceGrid = ({
   setSelectedIds,
   selectedData,
-  connectDataLack,
-  selectedLabelsDataLack,
   setSelectRowId,
   selectRowId,
-  paginationDatalack
+  filterWishSelectedLabelsDataLack
 }: Props) => {
+  const { settings } = useSettings()
+
   const [column, setColumn] = useState<ColDef[]>([])
   const [selectedRole, setSelectedRole] = useState('student') // default one checked
 
@@ -91,7 +98,6 @@ const AudienceGrid = ({
 
   const gridRef = useRef(null)
   // const gridRef = useRef<AgGridReact<any>>(null)
-  const { settings } = useSettings()
 
   useEffect(() => {
     if (!selectedData) return
@@ -188,12 +194,43 @@ const AudienceGrid = ({
     emp_status: 'Employee Status'
   }
 
-  const buildCols = (rows: any[]) => {
+  // const buildCols = (rows: any[]) => {
+  //   if (!rows?.length) return []
+  //   const keys = Object.keys(rows[0]).filter(k => !EXCLUDED.has(k))
+  //   return keys.map(field => ({
+  //     field,
+  //     headerName: HEADER_MAP[field] || toTitle(field), // 👈 use map first, fallback to toTitle
+  //     flex: 1,
+  //     minWidth: 140,
+  //     sortable: true,
+  //     filter: true,
+  //     resizable: true,
+  //     valueGetter: (p: any) => {
+  //       if (!p.data || !(field in p.data)) {
+  //         return '-'
+  //       }
+
+  //       const v = p.data[field]
+
+  //       if (Array.isArray(v)) {
+  //         return v.length ? v.join(', ') : '-'
+  //       }
+
+  //       return v === '' || v === null || v === undefined ? '-' : v
+  //     }
+  //   }))
+  // }
+
+  const buildCols = (rows: any[], role: string) => {
     if (!rows?.length) return []
-    const keys = Object.keys(rows[0]).filter(k => !EXCLUDED.has(k))
-    return keys.map(field => ({
+
+    // ✅ Allowed fields backend se lo
+    const allowedFields = filterWishSelectedLabelsDataLack.filter((f: any) => f.role === role).map((f: any) => f.id)
+
+    // ✅ Sirf allowed fields ke columns banao
+    return allowedFields.map(field => ({
       field,
-      headerName: HEADER_MAP[field] || toTitle(field), // 👈 use map first, fallback to toTitle
+      headerName: HEADER_MAP[field] || toTitle(field),
       flex: 1,
       minWidth: 140,
       sortable: true,
@@ -205,11 +242,7 @@ const AudienceGrid = ({
         }
 
         const v = p.data[field]
-
-        if (Array.isArray(v)) {
-          return v.length ? v.join(', ') : '-'
-        }
-
+        if (Array.isArray(v)) return v.length ? v.join(', ') : '-'
         return v === '' || v === null || v === undefined ? '-' : v
       }
     }))
@@ -225,6 +258,7 @@ const AudienceGrid = ({
     // after seeding selection, update merged state once
     const nodes = params.api.getSelectedNodes()
     selectedIdsByRoleRef.current[role] = nodes.map((n: any) => n.data.id ?? n.data.user_id)
+
     const merged = Object.values(selectedIdsByRoleRef.current).flat()
     setSelectedIds(merged)
     setSelectRowId(merged)
@@ -234,15 +268,16 @@ const AudienceGrid = ({
   const onSelectionChangedFactory = (role: string) => (params: any) => {
     const nodes = params.api.getSelectedNodes()
     const ids = nodes.map((n: any) => n.data.id ?? n.data.user_id)
+    console.log('nodes', nodes)
+    const roleCount = ids.length
 
+    console.log(`${role} selected count:`, roleCount)
     selectedIdsByRoleRef.current[role] = ids
 
     const merged = Object.values(selectedIdsByRoleRef.current).flat()
     setSelectedIds(merged)
     setSelectRowId(merged)
   }
-
-
 
   // 1) Stamp each row with a stable, per-grid unique key based on index
   const withStableKeys = (role: string, rows: any[]) =>
@@ -253,57 +288,49 @@ const AudienceGrid = ({
 
   return (
     <>
-      {Object?.entries(selectedData).map(([role, rows]) =>
-        Array.isArray(rows) && rows.length > 0 ? (
-          <div key={role} className='rounded-lg border bg-white shadow-sm mb-4'>
-            <div className='px-4 py-3 border-b flex items-center justify-between'>
-              <h3 className='text-base font-semibold'>{toTitle(role === 'guardian' ? 'Parent' : (role as string))}</h3>
-            </div>
-
-            <div className='p-4'>
-              <div className='ag-theme-quartz' style={{ width: '100%', height: 420 }}>
-                <AgGridReact
-                  // use stamped rows
-                  rowData={withStableKeys(role as string, rows as any[])}
-                  // 2) Use only the stamped key for getRowId (no collisions; stable across refresh)
-                  getRowId={p => p.data.__rid}
-                  columnDefs={[
-                    {
-                      headerName: '',
-                      checkboxSelection: true,
-                      headerCheckboxSelection: true,
-                      width: 50,
-                      pinned: 'left',
-                      sortable: false,
-                      filter: false
-                    },
-                    ...buildCols(rows as any[])
-                  ]}
-                  onFirstDataRendered={onFirstDataRenderedFactory(role as string)}
-                  onSelectionChanged={onSelectionChangedFactory(role as string)}
-                  defaultColDef={{ flex: 1, resizable: true, filter: true }}
-                  rowSelection='multiple'
-                  suppressRowClickSelection={true}
-                  suppressCellFocus
-                  overlayNoRowsTemplate={'<span style="padding:10px;">No data</span>'}
-                  pagination={true}
-                  paginationPageSize={25}
-                  paginationPageSizeSelector={[25, 50, 100, 200, 500]}
-                />
+      {Object?.entries(selectedData).map(
+        ([role, rows]) =>
+          Array.isArray(rows) &&
+          rows.length > 0 && (
+            <div key={role} className='rounded-lg border shadow-sm mb-4'>
+              <div className='px-4 py-3 border-b flex items-center justify-between'>
+                <h3 className='text-base font-semibold'>
+                  {toTitle(role === 'guardian' ? 'Parent' : (role as string))}
+                </h3>
+              </div>
+              <div className='p-4'>
+                <div className='ag-theme-quartz' style={{ width: '100%', height: 420 }}>
+                  <AgGridReact
+                    theme={settings?.mode === "light" ? themeLightCold : themeDarkBlue}
+                    rowData={withStableKeys(role as string, rows as any[])}
+                    getRowId={p => p.data.__rid}
+                    columnDefs={[
+                      {
+                        headerName: '',
+                        checkboxSelection: true,
+                        headerCheckboxSelection: true,
+                        width: 50,
+                        pinned: 'left',
+                        sortable: false,
+                        filter: false
+                      },
+                      ...buildCols(rows as any[], role as string)
+                    ]}
+                    onFirstDataRendered={onFirstDataRenderedFactory(role as string)}
+                    onSelectionChanged={onSelectionChangedFactory(role as string)}
+                    defaultColDef={{ flex: 1, resizable: true, filter: true }}
+                    rowSelection='multiple'
+                    suppressRowClickSelection={true}
+                    suppressCellFocus
+                    overlayNoRowsTemplate={'<span style="padding:10px;">No data</span>'}
+                    pagination={true}
+                    paginationPageSize={25}
+                    paginationPageSizeSelector={[25, 50, 100, 200, 500]}
+                  />
+                </div>
               </div>
             </div>
-          </div>
-        ) : (
-          <div key={role} className='rounded-lg border bg-white shadow-sm mb-4'>
-            <div className='px-4 py-3 border-b flex items-center justify-between'>
-              <h3 className='text-base font-semibold'>{toTitle(role === 'guardian' ? 'Parent' : (role as string))}</h3>
-            </div>
-
-            <div className='p-4 text-center text-gray-500'>
-              No data found for {role === 'guardian' ? 'Parents' : role}.
-            </div>
-          </div>
-        )
+          )
       )}
     </>
   )
