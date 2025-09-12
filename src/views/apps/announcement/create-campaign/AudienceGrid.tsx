@@ -292,7 +292,7 @@ const AudienceGrid = ({
         ([role, rows]) =>
           Array.isArray(rows) &&
           rows.length > 0 && (
-            <div key={role} className='rounded-lg border shadow-sm mb-4'>
+            <div key={role} style={{ color: settings.primaryColor }} className='rounded-lg border shadow-sm mb-4'>
               <div className='px-4 py-3 border-b flex items-center justify-between'>
                 <h3 className='text-base font-semibold'>
                   {toTitle(role === 'guardian' ? 'Parent' : (role as string))}
@@ -301,7 +301,7 @@ const AudienceGrid = ({
               <div className='p-4'>
                 <div className='ag-theme-quartz' style={{ width: '100%', height: 420 }}>
                   <AgGridReact
-                    theme={settings?.mode === "light" ? themeLightCold : themeDarkBlue}
+                    theme={theme}
                     rowData={withStableKeys(role as string, rows as any[])}
                     getRowId={p => p.data.__rid}
                     columnDefs={[
