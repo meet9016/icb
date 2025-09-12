@@ -197,11 +197,11 @@ const CampaignViewLogDialog = ({
       return [
         columnHelper.accessor('full_name', {
           header: 'Name',
-          cell: ({ row }) => <Typography>{row.original.full_name}</Typography>
+          cell: ({ row }) => <Typography className='text-center' >{row.original.full_name}</Typography>
         }),
         columnHelper.accessor('email', {
           header: 'Email',
-          cell: ({ row }) => <Typography>{row.original.email ?? '-'}</Typography>
+          cell: ({ row }) => <Typography className='text-center'>{row.original.email ?? '-'}</Typography>
         }),
         columnHelper.accessor('status', {
           header: 'Status',
@@ -225,7 +225,7 @@ const CampaignViewLogDialog = ({
                   : row.original.status || 'Unknown'
 
             return (
-              <div className='flex items-center gap-2 cursor-pointer'>
+              <div className='flex items-center gap-2 cursor-pointer justify-center'>
                 <Tooltip title={tooltipTitle}>
                   <span className={`flex items-center justify-center w-7 h-7 rounded-full bg-gray-100 ${color}`}>
                     <i className={`${icon} text-lg`} />
@@ -240,7 +240,7 @@ const CampaignViewLogDialog = ({
           cell: ({ row }) => {
             const raw = row.original.scheduled_at
             const formatted = raw ? dayjs(raw).format('DD-MM-YYYY hh:mm A') : '-'
-            return <Typography>{formatted}</Typography>
+            return <Typography className='text-center'>{formatted}</Typography>
           }
         }),
         columnHelper.accessor('sent_at', {
@@ -248,29 +248,29 @@ const CampaignViewLogDialog = ({
           cell: ({ row }) => {
             const raw = row.original.sent_at
             const formatted = raw ? dayjs(raw).format('DD-MM-YYYY hh:mm A') : '-'
-            return <Typography>{formatted}</Typography>
+            return <Typography className='text-center'>{formatted}</Typography>
           }
         }),
         // columnHelper.accessor('sent_time', {
         //   header: 'Delivered On',
         //   cell: ({ row }) => (
-        //     <Typography>{row.original.sent_time ? row.original.sent_time.slice(0, 5) : '-'}</Typography>
+        //     <Typography className='text-center'>{row.original.sent_time ? row.original.sent_time.slice(0, 5) : '-'}</Typography>
         //   )
         // }),
         columnHelper.accessor('opened_at', {
           header: 'Read At',
-          cell: ({ row }) => <Typography>{row.original.opened_at ?? '-'}</Typography>
+          cell: ({ row }) => <Typography className='text-center'>{row.original.opened_at ?? '-'}</Typography>
         })
       ]
     } else if (selectedChannel === 'sms') {
       return [
         columnHelper.accessor('name', {
           header: 'Name',
-          cell: ({ row }) => <Typography>{row.original.name ?? '-'}</Typography>
+          cell: ({ row }) => <Typography className='text-center'>{row.original.name ?? '-'}</Typography>
         }),
         columnHelper.accessor('user_phone', {
           header: 'phone',
-          cell: ({ row }) => <Typography>{row.original.user_phone ?? '-'}</Typography>
+          cell: ({ row }) => <Typography className='text-center'>{row.original.user_phone ?? '-'}</Typography>
         }),
         columnHelper.accessor('status', {
           header: 'Status',
@@ -293,7 +293,7 @@ const CampaignViewLogDialog = ({
                   : row.original.status || 'Unknown'
 
             return (
-              <div className='flex items-center gap-2 cursor-pointer'>
+              <div className='flex items-center gap-2 cursor-pointer justify-center'>
                 <Tooltip title={tooltipTitle}>
                   <span className={`flex items-center justify-center w-7 h-7 rounded-full bg-gray-100 ${color}`}>
                     <i className={`${icon} text-lg`} />
@@ -308,7 +308,7 @@ const CampaignViewLogDialog = ({
           cell: ({ row }) => {
             const raw = row.original.scheduled_at
             const formatted = raw ? dayjs(raw).format('DD-MM-YYYY hh:mm A') : '-'
-            return <Typography>{formatted}</Typography>
+            return <Typography className='text-center'>{formatted}</Typography>
           }
         }),
         columnHelper.accessor('sent_at', {
@@ -316,7 +316,7 @@ const CampaignViewLogDialog = ({
           cell: ({ row }) => {
             const raw = row.original.sent_at
             const formatted = raw ? dayjs(raw).format('DD-MM-YYYY hh:mm A') : '-'
-            return <Typography>{formatted}</Typography>
+            return <Typography className='text-center'>{formatted}</Typography>
           }
         })
       ]
@@ -324,18 +324,18 @@ const CampaignViewLogDialog = ({
       return [
         columnHelper.accessor('name', {
           header: 'Name',
-          cell: ({ row }) => <Typography>{row.original.name ?? '-'}</Typography>
+          cell: ({ row }) => <Typography className="text-center">{row.original.name ?? '-'}</Typography>
         }),
         columnHelper.accessor('user_phone', {
           header: 'phone',
-          cell: ({ row }) => <Typography>{row.original.user_phone ?? '-'}</Typography>
+          cell: ({ row }) => <Typography className="text-center">{row.original.user_phone ?? '-'}</Typography>
         }),
         // columnHelper.accessor('user_phone', {
         //   header: 'Device Name',
         //   cell: ({ row }) => <Typography>{row.original.user_phone ?? '-'}</Typography>
         // }),
         columnHelper.accessor('status', {
-          header: 'Status',
+          header: "status",
           cell: ({ row }) => {
             // main status info map
             const statusMap: Record<string, StatusInfo> = {
@@ -370,7 +370,7 @@ const CampaignViewLogDialog = ({
                   : statusKey || 'Unknown'
 
             return (
-              <div className='flex items-center gap-2 cursor-pointer'>
+              <div className='flex items-center justify-center gap-2 cursor-pointer'>
                 <Tooltip title={tooltipTitle}>
                   <span className={`flex items-center justify-center w-7 h-7 rounded-full bg-gray-100 ${color}`}>
                     <i className={`${icon} text-lg`} />
@@ -385,7 +385,7 @@ const CampaignViewLogDialog = ({
           cell: ({ row }) => {
             const raw = row.original.scheduled_at
             const formatted = raw ? dayjs(raw).format('DD-MM-YYYY hh:mm A') : '-'
-            return <Typography>{formatted}</Typography>
+            return <Typography className="text-center">{formatted}</Typography>
           }
         }),
         columnHelper.accessor('sent_at', {
@@ -393,7 +393,7 @@ const CampaignViewLogDialog = ({
           cell: ({ row }) => {
             const raw = row.original.sent_at
             const formatted = raw ? dayjs(raw).format('DD-MM-YYYY hh:mm A') : '-'
-            return <Typography>{formatted}</Typography>
+            return <Typography className='text-center'>{formatted}</Typography>
           }
         })
         // columnHelper.accessor('hours', {
@@ -409,11 +409,11 @@ const CampaignViewLogDialog = ({
       return [
         columnHelper.accessor('full_name', {
           header: 'Name',
-          cell: ({ row }) => <Typography>{row.original.full_name}</Typography>
+          cell: ({ row }) => <Typography className='text-center'>{row.original.full_name}</Typography>
         }),
         columnHelper.accessor('phone', {
           header: 'Phone',
-          cell: ({ row }) => <Typography>{row.original.phone ?? '-'}</Typography>
+          cell: ({ row }) => <Typography className='text-center'>{row.original.phone ?? '-'}</Typography>
         }),
         columnHelper.accessor('status', {
           header: 'Status',
@@ -439,7 +439,7 @@ const CampaignViewLogDialog = ({
                   : row.original.status || 'Unknown'
 
             return (
-              <div className='flex items-center gap-2 cursor-pointer'>
+              <div className='flex items-center gap-2 cursor-pointer justify-center'>
                 <Tooltip title={tooltipTitle}>
                   <span className={`flex items-center justify-center w-7 h-7 rounded-full bg-gray-100 ${color}`}>
                     <i className={`${icon} text-lg`} />
@@ -451,11 +451,11 @@ const CampaignViewLogDialog = ({
         }),
         columnHelper.accessor('scheduled_at', {
           header: 'Scheduled At',
-          // cell: ({ row }) => <Typography>{row.original.scheduled_at ?? '-'}</Typography>
+          // cell: ({ row }) => <Typography className='text-center'>{row.original.scheduled_at ?? '-'}</Typography>
           cell: ({ row }) => {
             const raw = row.original.scheduled_at
             const formatted = raw ? dayjs(raw).format('DD-MM-YYYY hh:mm A') : '-'
-            return <Typography>{formatted}</Typography>
+            return <Typography className='text-center'>{formatted}</Typography>
           }
         }),
         columnHelper.accessor('sent_at', {
@@ -463,7 +463,7 @@ const CampaignViewLogDialog = ({
           cell: ({ row }) => {
             const raw = row.original.sent_at
             const formatted = raw ? dayjs(raw).format('DD-MM-YYYY hh:mm A') : '-'
-            return <Typography>{formatted}</Typography>
+            return <Typography className='text-center'>{formatted}</Typography>
           }
         })
 

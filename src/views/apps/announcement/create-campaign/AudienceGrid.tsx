@@ -45,6 +45,7 @@ export interface Props {
   setSelectRowId: any
   selectRowId: any
   filterWishSelectedLabelsDataLack: any
+  selectedLabelsDataLack: any
 }
 
 type RoleKey = 'student' | 'parent' | 'teacher'
@@ -77,7 +78,8 @@ const AudienceGrid = ({
   selectedData,
   setSelectRowId,
   selectRowId,
-  filterWishSelectedLabelsDataLack
+  filterWishSelectedLabelsDataLack,
+  selectedLabelsDataLack
 }: Props) => {
   const { settings } = useSettings()
   const [column, setColumn] = useState<ColDef[]>([])
@@ -274,64 +276,64 @@ const AudienceGrid = ({
       __rid: `${role}__${idx}` // unique inside this grid regardless of user_id collisions
     }))
 
+  const allowedRoles =selectedLabelsDataLack && selectedLabelsDataLack.map(item => item.id);
   return (
     <>
-      {Object?.entries(selectedData).map(([role, rows]) =>
-          Array.isArray(rows) && rows.length > 0 && (
-            <div key={role} style={{ color: settings.primaryColor }} className='rounded-lg border shadow-sm'>
-              {/* <div className='px-4 py-3 border-b flex items-center justify-between'>
-                <h3 className='text-base font-semibold'>
+      {Object.entries(selectedData)
+       .filter(([role]) => allowedRoles.includes(role))
+        .map(
+          ([role, rows]) =>
+            Array.isArray(rows) &&
+            rows.length > 0 && (
+              <div key={role} style={{ color: settings.primaryColor }} className='rounded-lg border shadow-sm'>
+                <Typography
+                  className='px-5 py-3'
+                  variant='subtitle1'
+                  sx={{
+                    fontWeight: 700,
+                    color: 'text.primary',
+                    display: 'inline-block',
+                    textTransform: 'uppercase',
+                    letterSpacing: 0.5
+                  }}
+                >
                   {toTitle(role === 'guardian' ? 'Parent' : (role as string))}
-                </h3>
-              </div> */}
+                </Typography>
 
-              <Typography
-              className='px-5 py-3'
-                variant='subtitle1'
-                sx={{
-                  fontWeight: 700,
-                  color: 'text.primary',
-                  display: 'inline-block',
-                  textTransform: 'uppercase',
-                  letterSpacing: 0.5
-                }}
-              >
-                {toTitle(role === 'guardian' ? 'Parent' : (role as string))}
-              </Typography>
-              <div className=''>
-                <div className='ag-theme-quartz' style={{ width: '100%', height: 420 }}>
-                  <AgGridReact
-                    theme={theme}
-                    rowData={withStableKeys(role as string, rows as any[])}
-                    getRowId={p => p.data.__rid}
-                    columnDefs={[
-                      {
-                        headerName: '',
-                        checkboxSelection: true,
-                        headerCheckboxSelection: true,
-                        width: 50,
-                        pinned: 'left',
-                        sortable: false,
-                        filter: false
-                      },
-                      ...buildCols(rows as any[], role as string)
-                    ]}
-                    onFirstDataRendered={onFirstDataRenderedFactory(role as string)}
-                    onSelectionChanged={onSelectionChangedFactory(role as string)}
-                    defaultColDef={{ flex: 1, resizable: true, filter: true }}
-                    rowSelection='multiple'
-                    suppressRowClickSelection={true}
-                    suppressCellFocus
-                    overlayNoRowsTemplate={'<span style="padding:10px;">No data</span>'}
-                    pagination={true}
-                    paginationPageSize={25}
-                    paginationPageSizeSelector={[25, 50, 100, 200, 500]}
-                  />
+                <div className=''>
+                  <div className='ag-theme-quartz' style={{ width: '100%', height: 420 }}>
+                    <AgGridReact
+                      theme={theme}
+                      rowData={withStableKeys(role as string, rows as any[])}
+                      getRowId={p => p.data.__rid}
+                      columnDefs={[
+                        {
+                          headerName: '',
+                          checkboxSelection: true,
+                          headerCheckboxSelection: true,
+                          width: 50,
+                          pinned: 'left',
+                          sortable: false,
+                          filter: false
+                        },
+                        ...buildCols(rows as any[], role as string)
+                      ]}
+                      onFirstDataRendered={onFirstDataRenderedFactory(role as string)}
+                      onSelectionChanged={onSelectionChangedFactory(role as string)}
+                      defaultColDef={{ flex: 1, resizable: true, filter: true }}
+                      rowSelection='multiple'
+                      suppressRowClickSelection={true}
+                      suppressCellFocus
+                      overlayNoRowsTemplate={'<span style="padding:10px;">No data</span>'}
+                      pagination={true}
+                      paginationPageSize={25}
+                      paginationPageSizeSelector={[25, 50, 100, 200, 500]}
+                    />
+                  </div>
                 </div>
               </div>
-            </div>
-          )
-      )}
+            )
+        )}
     </>
   )
 }

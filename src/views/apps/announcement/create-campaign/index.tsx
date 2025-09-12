@@ -1002,6 +1002,7 @@ const CreateCampaign = () => {
             setSelectRowId={setSelectRowId}
             selectRowId={selectRowId}
             filterWishSelectedLabelsDataLack={filterWishSelectedLabelsDataLack}
+            selectedLabelsDataLack={selectedLabelsDataLack}
           />
         )}
       </Box>
