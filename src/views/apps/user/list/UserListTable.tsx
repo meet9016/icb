@@ -111,6 +111,7 @@ type UsersTypeWithAction = UsersType & {
   action?: string
   fullName: string
   name: string
+  dl_contact_types: string
 }
 
 type UserStatusType = {
@@ -349,6 +350,10 @@ const UserListTable = ({ tableData }: { tableData?: UsersType[] }) => {
       columnHelper.accessor('email', {
         header: 'Email',
         cell: ({ row }) => <Typography>{row.original.email}</Typography>
+      }),
+      columnHelper.accessor('dl_contact_type', {
+        header: 'Contact Type',
+        cell: ({ row }) => <Typography>{row.original.dl_contact_type ?? '-'}</Typography>
       }),
       columnHelper.accessor('role', {
         header: 'Role',

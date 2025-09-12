@@ -15,7 +15,8 @@ import {
   Chip,
   Paper,
   Checkbox,
-  ListItemText
+  ListItemText,
+  FormControl
 } from '@mui/material'
 import {
   awardCodeDropDown,
@@ -449,7 +450,7 @@ const FilterCampaign = ({
               <Grid item xs={12} md={12}>
                 <Stack spacing={3}>
                   {/* Top Row: Role Select + Go Button */}
-                  <Stack direction='row' spacing={2} alignItems='center'>
+                  <FormControl>
                     <Autocomplete
                       multiple
                       disableCloseOnSelect
@@ -463,7 +464,7 @@ const FilterCampaign = ({
                       sx={{ width: 600 }}
                       renderInput={params => <TextField {...params} />}
                     />
-                  </Stack>
+                  </FormControl>
 
                   {/* Role-wise Filters */}
                 </Stack>

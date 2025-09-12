@@ -1,5 +1,5 @@
 'use client'
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import React, { useCallback, useEffect, useRef, useState } from 'react'
 import './styles.css'
 import { AgGridReact } from 'ag-grid-react'
 import {
@@ -8,10 +8,6 @@ import {
   RowSelectionModule,
   ValidationModule,
   PaginationModule,
-  colorSchemeDarkBlue,
-  colorSchemeDarkWarm,
-  colorSchemeLightCold,
-  colorSchemeLightWarm,
   themeQuartz,
   ColDef,
   GetRowIdParams
@@ -25,9 +21,8 @@ import {
 } from 'ag-grid-enterprise'
 import { ModuleRegistry } from 'ag-grid-community'
 import { RowApiModule } from 'ag-grid-community'
-import { IconButton, Switch, Tooltip } from '@mui/material'
+import { Typography } from '@mui/material'
 import { useSettings } from '@/@core/hooks/useSettings'
-import themeConfig from '@configs/themeConfig'
 
 // Register required AG Grid modules
 ModuleRegistry.registerModules([
@@ -43,9 +38,6 @@ ModuleRegistry.registerModules([
   SetFilterModule,
   ...(process.env.NODE_ENV !== 'production' ? [ValidationModule] : [])
 ])
-
-const themeLightCold = themeQuartz.withPart(colorSchemeLightCold)
-const themeDarkBlue = themeQuartz.withPart(colorSchemeDarkBlue)
 
 export interface Props {
   setSelectedIds: any
@@ -88,7 +80,6 @@ const AudienceGrid = ({
   filterWishSelectedLabelsDataLack
 }: Props) => {
   const { settings } = useSettings()
-
   const [column, setColumn] = useState<ColDef[]>([])
   const [selectedRole, setSelectedRole] = useState('student') // default one checked
 
@@ -199,7 +190,7 @@ const AudienceGrid = ({
   //   const keys = Object.keys(rows[0]).filter(k => !EXCLUDED.has(k))
   //   return keys.map(field => ({
   //     field,
-  //     headerName: HEADER_MAP[field] || toTitle(field), // 👈 use map first, fallback to toTitle
+  //     headerName: HEADER_MAP[field] || toTitle(field), // use map first, fallback to toTitle
   //     flex: 1,
   //     minWidth: 140,
   //     sortable: true,
@@ -224,10 +215,8 @@ const AudienceGrid = ({
   const buildCols = (rows: any[], role: string) => {
     if (!rows?.length) return []
 
-    // ✅ Allowed fields backend se lo
     const allowedFields = filterWishSelectedLabelsDataLack.filter((f: any) => f.role === role).map((f: any) => f.id)
 
-    // ✅ Sirf allowed fields ke columns banao
     return allowedFields.map(field => ({
       field,
       headerName: HEADER_MAP[field] || toTitle(field),
@@ -258,7 +247,6 @@ const AudienceGrid = ({
     // after seeding selection, update merged state once
     const nodes = params.api.getSelectedNodes()
     selectedIdsByRoleRef.current[role] = nodes.map((n: any) => n.data.id ?? n.data.user_id)
-
     const merged = Object.values(selectedIdsByRoleRef.current).flat()
     setSelectedIds(merged)
     setSelectRowId(merged)
@@ -288,17 +276,29 @@ const AudienceGrid = ({
 
   return (
     <>
-      {Object?.entries(selectedData).map(
-        ([role, rows]) =>
-          Array.isArray(rows) &&
-          rows.length > 0 && (
-            <div key={role} style={{ color: settings.primaryColor }} className='rounded-lg border shadow-sm mb-4'>
-              <div className='px-4 py-3 border-b flex items-center justify-between'>
+      {Object?.entries(selectedData).map(([role, rows]) =>
+          Array.isArray(rows) && rows.length > 0 && (
+            <div key={role} style={{ color: settings.primaryColor }} className='rounded-lg border shadow-sm'>
+              {/* <div className='px-4 py-3 border-b flex items-center justify-between'>
                 <h3 className='text-base font-semibold'>
                   {toTitle(role === 'guardian' ? 'Parent' : (role as string))}
                 </h3>
-              </div>
-              <div className='p-4'>
+              </div> */}
+
+              <Typography
+              className='px-5 py-3'
+                variant='subtitle1'
+                sx={{
+                  fontWeight: 700,
+                  color: 'text.primary',
+                  display: 'inline-block',
+                  textTransform: 'uppercase',
+                  letterSpacing: 0.5
+                }}
+              >
+                {toTitle(role === 'guardian' ? 'Parent' : (role as string))}
+              </Typography>
+              <div className=''>
                 <div className='ag-theme-quartz' style={{ width: '100%', height: 420 }}>
                   <AgGridReact
                     theme={theme}
