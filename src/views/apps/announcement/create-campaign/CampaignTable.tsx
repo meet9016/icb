@@ -563,10 +563,13 @@ const CampaignListPage = ({ tableData }: { tableData?: UsersType[] }) => {
 
   const [expanded, setExpanded] = useState(false)
 
-  const description =
-    'Notify users about Diwali special discounts. Notify users about Diwali special discounts. Notify users about Diwali special discounts. Notify users about Diwali special discounts. Notify users about Diwali special discounts. Notify users about Diwali special discounts. Notify users about Diwali special discounts. Notify users about Diwali special discounts.'
+  // const description = data[0]?.announcement?.description
 
-  const shortDescription = description.length > 70 ? description.slice(0, 70) + '...' : description
+  const tempDiv = document.createElement('div')
+  tempDiv.innerHTML = data[0]?.announcement?.description
+  const description = tempDiv.textContent || tempDiv.innerText || ''
+
+  const shortDescription = description?.length > 70 ? description?.slice(0, 70) + '...' : description
   return (
     <>
       <p style={{ color: settings.primaryColor }} className='font-bold flex items-center gap-2 mb-6'>
@@ -615,32 +618,41 @@ const CampaignListPage = ({ tableData }: { tableData?: UsersType[] }) => {
         ))}
       </Grid>
 
-      <div className='bg-white shadow rounded-lg p-4 mb-4'>
-        <h2 className='text-xl font-semibold mb-2'>Announcement Detail</h2>
-        <div className='flex flex-wrap gap-6 text-sm text-gray-600'>
-          <div>
-            <span className='font-medium text-gray-800'>Announcement Title: </span>
-            Testing
-          </div>
-          <div>
-            <span className='font-medium text-gray-800'>Announcement Status: </span>
-            In Progress
-          </div>
-          <div>
-            <span className='font-medium text-gray-800'>Location: </span>
-            India
-          </div>
-          <div>
-            <span className='font-medium text-gray-800'>Description: </span>
-            {expanded ? description : shortDescription}
-            {description.length > 100 && (
-              <button className='text-blue-600 ml-1 hover:underline cursor-pointer' onClick={() => setExpanded(!expanded)}>
-                {expanded ? 'Read less' : 'Read more'}
-              </button>
-            )}
+      {loading ? (
+        <>
+          <Skeleton variant='rectangular' height={80} className='rounded-md mb-6' />
+        </>
+      ) : (
+        <div className='bg-white shadow rounded-lg p-4 mb-4'>
+          <h2 className='text-xl font-semibold mb-2'>Announcement Detail</h2>
+          <div className='flex flex-wrap gap-6 text-sm text-gray-600'>
+            <div>
+              <span className='font-medium text-gray-800 capitalize'>Announcement Title 📅: </span>
+              {data[0]?.announcement?.title}
+            </div>
+            <div className='capitalize'>
+              <span className='font-medium text-gray-800'>Announcement Status 📢: </span>
+              {data[0]?.announcement?.status_name}
+            </div>
+            <div>
+              <span className='font-medium text-gray-800'>Location 🌎: </span>
+              India
+            </div>
+            <div>
+              <span className='font-medium text-gray-800'>Description 🧾: </span>
+              {expanded ? description : shortDescription}
+              {description?.length > 100 && (
+                <button
+                  className='text-blue-600 ml-1 hover:underline cursor-pointer'
+                  onClick={() => setExpanded(!expanded)}
+                >
+                  {expanded ? 'Read less' : 'Read more'}
+                </button>
+              )}
+            </div>
           </div>
         </div>
-      </div>
+      )}
       <Card>
         {/* <CardHeader title='Filters' className='pbe-4' /> */}
         <Divider />

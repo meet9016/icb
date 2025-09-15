@@ -474,7 +474,7 @@ const CampaignViewLogDialog = ({
           }
         }),
         columnHelper.accessor('sent_at', {
-          header: 'Send At',
+          header: 'Sent At',
           cell: ({ row }) => {
             const raw = row.original.sent_at
             const formatted = raw ? dayjs(raw).format('DD-MM-YYYY hh:mm A') : '-'

@@ -72,8 +72,6 @@ const CreateCampaign = () => {
 
   const [filterWishDataLack, setFilterWishDataLack] = useState<RoleOption[]>([])
   const [filterWishSelectedLabelsDataLack, setFilterWishSelectedLabelsDataLack] = useState([])
-  const [filterWishCommonColumn, setFilterWishCommonColumn] = useState(['f_name', 'email', 'l_name', 'phone'])
-
   const [selectedIds, setSelectedIds] = useState([])
   const [status, setStatus] = useState('One Time')
   const [mode, setMode] = useState('one_time')
@@ -116,7 +114,6 @@ const CreateCampaign = () => {
   const [roleLoading, setroleLoading] = useState(false)
   const [isLoading, setisLoading] = useState(false)
   const [loaderMain, setloaderMain] = useState(false)
-  const [columnSelectedEdit, setColumnSelectedEdit] = useState()
 
   // Comman column Filter
   const [commanColumnFilter, setCommanColumnFilter] = useState<any>({
@@ -231,15 +228,6 @@ const CreateCampaign = () => {
     sms: 'SMS'
   }
 
-  const handleFilterRoleUserChangeDataLack = (newValues: any) => {
-    // setFilterWishSelectedLabelsDataLack(newValues)
-
-    if (newValues && newValues.length > 0) {
-    } else {
-      setSelectedData([]) // or show all
-    }
-  }
-
   const fetchRoles = async () => {
     try {
       const response = await api.get(`${endPointApi.getRolesDropdown}`)
@@ -278,6 +266,8 @@ const CreateCampaign = () => {
   }, [])
 
   const fetchFilterDataLack = async () => {
+    console.log('9999')
+
     setisLoading(true)
     try {
       const select = selectedLabelsDataLack.map((val: any) => val.id)
@@ -321,7 +311,6 @@ const CreateCampaign = () => {
           }))
           allFilters.push(...teacherFilters)
         }
-        setColumnSelectedEdit(res.data.column_names)
         setFilterWishDataLack(allFilters)
       }
     } catch (err) {
@@ -387,12 +376,12 @@ const CreateCampaign = () => {
         return []
       }
       // const firstUsers = toArray(resFilter?.data?.data)
-      
+
       setSelectedData(resFilter?.data?.data)
 
-      if (resFilter?.data?.status === 'true') {
+      if (resFilter?.data?.status === 200) {
         setSelectedLabelsDataLack(selectedRoles)
-console.log("resFilter",resFilter?.data);
+        console.log('resFilter', resFilter?.data)
 
         const allFilters: RoleOption[] = []
         const filtersCatalog = resFilter?.data?.filters
@@ -407,7 +396,7 @@ console.log("resFilter",resFilter?.data);
           initialFormState: Record<string, any>
         ) => {
           if (!Array.isArray(roleFilters)) return
-      console.log("roleFilters",roleFilters);
+          console.log('roleFilters', roleFilters)
 
           const processed: RoleOption[] = roleFilters.map((item: any) => {
             if (item?.update_value === true && item?.selected_filter_values !== null && item?.column_name) {
@@ -433,7 +422,7 @@ console.log("resFilter",resFilter?.data);
 
           allFilters.push(...processed)
         }
-console.log("filtersCatalog",filtersCatalog);
+        console.log('filtersCatalog', filtersCatalog)
 
         // fill role filters
         processRoleFilters(filtersCatalog?.parent, 'parent', initialParentForm)
@@ -450,17 +439,20 @@ console.log("filtersCatalog",filtersCatalog);
         if (Object.keys(initialTeacherForm).length) {
           setTeacherForm((prev: any) => ({ ...prev, ...initialTeacherForm }))
         }
-console.log("*****",resFilter?.data?.column_names);
+        console.log('*****', resFilter?.data?.column_names)
 
         setFilterWishDataLack(allFilters)
         setFilterWishSelectedRole(resFilter?.data?.column_names)
 
-        const formatted = resFilter?.data?.column_names?.split(',')?.map((val: any) => ({
-          id: val,
-          name: val
-        }))
-        console.log("formatted",formatted);
-        
+        const formatted = Object.entries(resFilter?.data?.column_names).flatMap(([role, ids]) =>
+          ids.map(id => ({ id, role }))
+        )
+        // const formatted = resFilter?.data?.column_names?.split(',')?.map((val: any) => ({
+        //   id: val,
+        //   name: val
+        // }))
+        console.log('formatted-****', formatted)
+
         setFilterWishSelectedLabelsDataLack(formatted)
       }
       //Filter api End
@@ -711,7 +703,6 @@ console.log("*****",resFilter?.data?.column_names);
 
     try {
       const select = selectedLabelsDataLack.map((val: any) => val.id)
-      // const selectColumn = filterWishSelectedLabelsDataLack.map((val: any) => val.id)
 
       const body = {
         roles: select,
@@ -732,7 +723,6 @@ console.log("*****",resFilter?.data?.column_names);
         setSelectedData(res.data.data)
       } else {
         console.warn('Unexpected response:', res.data)
-        // setFilterWishSelectedLabelsDataLack([])
         setFilterWishDataLack([])
 
         // Optionally: ShowErrorToast(res.data.message)
@@ -987,14 +977,11 @@ console.log("*****",resFilter?.data?.column_names);
         setStudentForm={setStudentForm}
         filterWishDataLack={filterWishDataLack}
         filterWishSelectedLabelsDataLack={filterWishSelectedLabelsDataLack}
-        filterWishCommonColumn={filterWishCommonColumn}
-        setFilterWishCommonColumn={setFilterWishCommonColumn}
         setFilterWishSelectedLabelsDataLack={setFilterWishSelectedLabelsDataLack}
         setSelectedLabelsDataLack={setSelectedLabelsDataLack}
         goFilterData={goFilterData}
         setSelectedData={setSelectedData}
         setSelectedLabels={setSelectedLabels}
-        columnSelectedEdit={columnSelectedEdit}
         filterWishSelectedRole={filterWishSelectedRole}
         ids={ids}
       />
@@ -1228,8 +1215,8 @@ console.log("*****",resFilter?.data?.column_names);
                       {ids
                         ? showEditTimeChannel
                         : selectedChannel && selectedChannel.map(item => channelMap[item] || item).join(', ')}
-                    </b>
-                    {' '}on{' '}
+                    </b>{' '}
+                    on{' '}
                     <b>
                       {dayjs(startDateTime).isValid()
                         ? dayjs(startDateTime).format('DD-MM-YYYY hh:mm A')

@@ -58,9 +58,6 @@ export interface Props {
   goFilterData?: any
   setSelectedData?: any
   setSelectedLabels?: any
-  setFilterWishCommonColumn?: any
-  filterWishCommonColumn?: any
-  columnSelectedEdit?: any
   filterWishSelectedRole?: any
   ids?: any
 }
@@ -87,9 +84,6 @@ const FilterCampaign = ({
   goFilterData,
   setSelectedData,
   setSelectedLabels,
-  filterWishCommonColumn,
-  setFilterWishCommonColumn,
-  columnSelectedEdit,
   filterWishSelectedRole,
   ids
 }: Props) => {
@@ -99,14 +93,15 @@ const FilterCampaign = ({
   //     prev.includes(id) ? prev.filter((item: any) => item !== id) : [...prev, id]
   //   )
   // }
+  console.log("filterWishSelectedLabelsDataLack****",filterWishSelectedLabelsDataLack);
   
   const { settings } = useSettings()
 
-  const handleSelectCommonColumn = (id: string) => {
-    setFilterWishCommonColumn((prev: any) =>
-      prev.includes(id) ? prev.filter((item: any) => item !== id) : [...prev, id]
-    )
-  }
+  // const handleSelectCommonColumn = (id: string) => {
+  //   setFilterWishCommonColumn((prev: any) =>
+  //     prev.includes(id) ? prev.filter((item: any) => item !== id) : [...prev, id]
+  //   )
+  // }
 
   // type of selection state
   type SelectedItem = { id: number; role: string }
@@ -294,6 +289,8 @@ const FilterCampaign = ({
     return acc
   }, {})
 
+  console.log("filterWishDataLack----",filterWishDataLack);
+  
   //Default Parent, student, teacher selected
   const groupedDataRoleWise = filterWishDataLack?.reduce((acc: any, item: any) => {
     if (!acc[item.rol_name]) acc[item.rol_name] = []
@@ -326,10 +323,12 @@ const FilterCampaign = ({
     if (!groupedDataRoleWise || Object.keys(groupedDataRoleWise).length === 0) return
 
     Object.entries(groupedDataRoleWise).forEach(([roleKey, items]: [string, any[]]) => {
+
       if (!items || items.length === 0) return
 
       const roleName = toKey(roleKey)
-      if (seededRolesRef.current.has(roleName)) return // already seeded this role
+
+      // if (seededRolesRef.current.has(roleName)) return // already seeded this role
 
       const wanted = ids ? filterWishSelectedRole[roleName] : defaultRoleSelections[roleName]
 
@@ -349,7 +348,6 @@ const FilterCampaign = ({
         const alreadySelected = filterWishSelectedLabelsDataLack?.some(
           (x: any) => x.id === item.id && sameKey(x.role, itemRole)
         )
-
         if (!alreadySelected) {
           handleSelect(item.id, itemRole) // your toggler should add when not selected
           didSeedForThisRole = true
@@ -877,6 +875,7 @@ const FilterCampaign = ({
                           const isSelected = filterWishSelectedLabelsDataLack?.some(
                             (x: any) => x.id === item.id && sameKey(x.role, chipRole)
                           )
+console.log("isSelected",filterWishSelectedLabelsDataLack);
 
                           return (
                             <Chip
