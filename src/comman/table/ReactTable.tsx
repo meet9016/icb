@@ -130,7 +130,7 @@ const ReactTable = ({
                   <th key={header.id} className='h-[42px] text-xs px-2 py-1'>
                     {!header.isPlaceholder && (
                       <div
-                        className='flex justify-center items-center'
+                        className='flex justify-center items-center capitalize text-[14px]'
                         onClick={header.column.getToggleSortingHandler()}
                       >
                         {flexRender(header.column.columnDef.header, header.getContext())}

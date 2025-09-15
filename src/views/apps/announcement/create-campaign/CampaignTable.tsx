@@ -322,7 +322,7 @@ const CampaignListPage = ({ tableData }: { tableData?: UsersType[] }) => {
                   onClick={() => {
                     setOpenDialog(true)
                     setChannelName(row.original.channels)
-                    setViewLogId(row.original.id as string);
+                    setViewLogId(row.original.id as string)
                   }}
                 >
                   <i className='ri-eye-line' style={{ color: '' }} />
@@ -384,29 +384,29 @@ const CampaignListPage = ({ tableData }: { tableData?: UsersType[] }) => {
 
       const updatedData: DataType[] = [
         {
-          title: 'Whatsapp',
-          value: response.whatsapp?.toString() || '0',
+          title: 'WhatsApp',
+          value: response.cp_wp?.toString() || '0',
           color: '#25D366',
           iconClass: '<i class="ri-whatsapp-line"></i>',
           bg: '#E8F5E9'
         },
         {
-          title: 'Sms',
-          value: response.sms?.toString() || '0',
+          title: 'SMS',
+          value: response.cp_sms?.toString() || '0',
           color: '#DB2777',
           iconClass: '<i class="ri-message-2-line"></i>',
           bg: '#FCE7F3'
         },
         {
           title: 'Email',
-          value: response.email_sent?.toString() || '0',
+          value: response.cp_email?.toString() || '0',
           color: '#4338CA',
           iconClass: '<i class="ri-mail-line"></i>',
           bg: '#E0E7FF'
         },
         {
           title: 'Mobile App Notification',
-          value: response.push_sent?.toString() || '0',
+          value: response.cp_push_noti?.toString() || '0',
           color: '#CA8A04',
           iconClass: '<i class="ri-notification-3-line"></i>',
           bg: '#FEF9C3'
@@ -560,6 +560,13 @@ const CampaignListPage = ({ tableData }: { tableData?: UsersType[] }) => {
       getSmsViewLog()
     }
   }, [viewLogId, openDialog, paginationSms.page, paginationSms.perPage, globalFilterLog])
+
+  const [expanded, setExpanded] = useState(false)
+
+  const description =
+    'Notify users about Diwali special discounts. Notify users about Diwali special discounts. Notify users about Diwali special discounts. Notify users about Diwali special discounts. Notify users about Diwali special discounts. Notify users about Diwali special discounts. Notify users about Diwali special discounts. Notify users about Diwali special discounts.'
+
+  const shortDescription = description.length > 70 ? description.slice(0, 70) + '...' : description
   return (
     <>
       <p style={{ color: settings.primaryColor }} className='font-bold flex items-center gap-2 mb-6'>
@@ -571,45 +578,6 @@ const CampaignListPage = ({ tableData }: { tableData?: UsersType[] }) => {
         </span>
         Announcement / Campaign
       </p>
-      {/* <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 py-6'>
-        {channelCounts.map((item, i) => (
-          <div
-            key={i}
-            className='flex items-center gap-4 p-4 rounded-lg transition-all duration-200 hover:shadow-lg border'
-            style={{ borderColor: item.color }}
-          >
-            <Box
-              sx={{
-                width: 52,
-                height: 52,
-                backgroundColor: item.bg,
-                color: item.color,
-                borderRadius: '50%',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                fontSize: 32,
-                boxShadow: 2,
-                mb: 1
-              }}
-              dangerouslySetInnerHTML={{ __html: item.iconClass }}
-            />
-
-            <div>
-              <Typography className='font-medium text-sm' color='text.secondary'>
-                {item.title}
-              </Typography>
-              <Typography
-                variant='h5'
-                className='font-bold mt-1'
-                style={{ color: `var(--mui-palette-${item.color}-main)` }}
-              >
-                {item.value}
-              </Typography>
-            </div>
-          </div>
-        ))}
-      </div> */}
 
       <Grid container spacing={6} className='mb-6'>
         {channelCounts.map((item, i) => (
@@ -638,17 +606,6 @@ const CampaignListPage = ({ tableData }: { tableData?: UsersType[] }) => {
                 <div className='flex flex-col'>
                   <div className='flex items-center gap-2'>
                     <Typography variant='h5'>{item.value}</Typography>
-                    {/* <div className="flex items-center">
-                      <i
-                        className={classNames(
-                          "text-xl",
-                          "ri-arrow-up-s-line text-success"
-                        )}
-                      />
-                      <Typography variant="body2" color={"success.main"}>
-                        {item.percentage}%
-                      </Typography>
-                    </div> */}
                   </div>
                   <Typography>{item.title}</Typography>
                 </div>
@@ -658,6 +615,32 @@ const CampaignListPage = ({ tableData }: { tableData?: UsersType[] }) => {
         ))}
       </Grid>
 
+      <div className='bg-white shadow rounded-lg p-4 mb-4'>
+        <h2 className='text-xl font-semibold mb-2'>Announcement Detail</h2>
+        <div className='flex flex-wrap gap-6 text-sm text-gray-600'>
+          <div>
+            <span className='font-medium text-gray-800'>Announcement Title: </span>
+            Testing
+          </div>
+          <div>
+            <span className='font-medium text-gray-800'>Announcement Status: </span>
+            In Progress
+          </div>
+          <div>
+            <span className='font-medium text-gray-800'>Location: </span>
+            India
+          </div>
+          <div>
+            <span className='font-medium text-gray-800'>Description: </span>
+            {expanded ? description : shortDescription}
+            {description.length > 100 && (
+              <button className='text-blue-600 ml-1 hover:underline cursor-pointer' onClick={() => setExpanded(!expanded)}>
+                {expanded ? 'Read less' : 'Read more'}
+              </button>
+            )}
+          </div>
+        </div>
+      </div>
       <Card>
         {/* <CardHeader title='Filters' className='pbe-4' /> */}
         <Divider />

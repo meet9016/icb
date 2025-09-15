@@ -134,7 +134,7 @@ const CampaignViewLogDialog = ({
   loaderEmailView,
   loaderNotifiView,
   loaderWpView,
-  loaderSmsView,
+  loaderSmsView
 }: CampaignDialogProps) => {
   const [selectedCheckbox, setSelectedCheckbox] = useState<string[]>([])
   const [roleName, setRoleName] = useState<string>('')
@@ -197,7 +197,7 @@ const CampaignViewLogDialog = ({
       return [
         columnHelper.accessor('full_name', {
           header: 'Name',
-          cell: ({ row }) => <Typography className='text-center' >{row.original.full_name}</Typography>
+          cell: ({ row }) => <Typography className='text-center'>{row.original.full_name}</Typography>
         }),
         columnHelper.accessor('email', {
           header: 'Email',
@@ -210,19 +210,24 @@ const CampaignViewLogDialog = ({
 
             const statusMap: Record<string, StatusInfo> = {
               queued: { icon: 'ri-time-line', color: 'text-yellow-500', label: 'Queued' },
-              sending: { icon: 'ri-send-plane-line', color: 'text-blue-500', label: 'Send' },
+              sent: { icon: 'ri-send-plane-line', color: 'text-blue-500', label: 'Send' },
               failed: { icon: 'ri-close-circle-line', color: 'text-red-500', label: 'Failed' },
-              opened: { icon: 'ri-mail-open-line', color: 'text-green-500', label: 'Opened' } // 🔽 lowercase key
+              opened: { icon: 'ri-mail-open-line', color: 'text-green-500', label: 'Opened' }
             }
 
             const { icon, color, label } = status in statusMap ? statusMap[status] : '-'
+            console.log('status', status)
 
             const tooltipTitle =
               status === 'failed'
                 ? row.original.error_message || 'Failed'
-                : status === 'sending'
-                  ? 'Sent it'
-                  : row.original.status || 'Unknown'
+                : status === 'queued'
+                  ? 'In Queue'
+                  : status === 'sending' || status === 'sent'
+                    ? 'Sent'
+                    : status === 'opened'
+                    ? 'Open'
+                    : row.original.status || 'Unknown'
 
             return (
               <div className='flex items-center gap-2 cursor-pointer justify-center'>
@@ -254,12 +259,16 @@ const CampaignViewLogDialog = ({
         // columnHelper.accessor('sent_time', {
         //   header: 'Delivered On',
         //   cell: ({ row }) => (
-        //     <Typography className='text-center'>{row.original.sent_time ? row.original.sent_time.slice(0, 5) : '-'}</Typography>
+        //     <Typography>{row.original.sent_time ? row.original.sent_time.slice(0, 5) : '-'}</Typography>
         //   )
         // }),
         columnHelper.accessor('opened_at', {
-          header: 'Read At',
-          cell: ({ row }) => <Typography className='text-center'>{row.original.opened_at ?? '-'}</Typography>
+          header: 'Open At',
+          cell: ({ row }) => {
+            const raw = row.original.opened_at
+            const formatted = raw ? dayjs(raw).format('DD-MM-YYYY hh:mm A') : '-'
+            return <Typography className='text-center'>{formatted}</Typography>
+          }
         })
       ]
     } else if (selectedChannel === 'sms') {
@@ -288,8 +297,10 @@ const CampaignViewLogDialog = ({
             const tooltipTitle =
               status === 'failed'
                 ? row.original.error_message || 'Failed'
+                 : status === 'queued'
+                  ? 'In Queue'
                 : status === 'sending'
-                  ? 'Sent it'
+                  ? 'Sent'
                   : row.original.status || 'Unknown'
 
             return (
@@ -324,18 +335,18 @@ const CampaignViewLogDialog = ({
       return [
         columnHelper.accessor('name', {
           header: 'Name',
-          cell: ({ row }) => <Typography className="text-center">{row.original.name ?? '-'}</Typography>
+          cell: ({ row }) => <Typography className='text-center'>{row.original.name ?? '-'}</Typography>
         }),
         columnHelper.accessor('user_phone', {
           header: 'phone',
-          cell: ({ row }) => <Typography className="text-center">{row.original.user_phone ?? '-'}</Typography>
+          cell: ({ row }) => <Typography className='text-center'>{row.original.user_phone ?? '-'}</Typography>
         }),
         // columnHelper.accessor('user_phone', {
         //   header: 'Device Name',
         //   cell: ({ row }) => <Typography>{row.original.user_phone ?? '-'}</Typography>
         // }),
         columnHelper.accessor('status', {
-          header: "status",
+          header: 'Status',
           cell: ({ row }) => {
             // main status info map
             const statusMap: Record<string, StatusInfo> = {
@@ -365,12 +376,14 @@ const CampaignViewLogDialog = ({
             const tooltipTitle =
               status === 'failed'
                 ? row.original.error_message || 'Failed'
+                 : status == 0
+                  ? 'In Queue'
                 : status == 1
-                  ? 'Sent it'
+                  ? 'Sent'
                   : statusKey || 'Unknown'
 
             return (
-              <div className='flex items-center justify-center gap-2 cursor-pointer'>
+              <div className='flex items-center gap-2 cursor-pointer justify-center'>
                 <Tooltip title={tooltipTitle}>
                   <span className={`flex items-center justify-center w-7 h-7 rounded-full bg-gray-100 ${color}`}>
                     <i className={`${icon} text-lg`} />
@@ -385,7 +398,7 @@ const CampaignViewLogDialog = ({
           cell: ({ row }) => {
             const raw = row.original.scheduled_at
             const formatted = raw ? dayjs(raw).format('DD-MM-YYYY hh:mm A') : '-'
-            return <Typography className="text-center">{formatted}</Typography>
+            return <Typography className='text-center'>{formatted}</Typography>
           }
         }),
         columnHelper.accessor('sent_at', {
@@ -434,8 +447,10 @@ const CampaignViewLogDialog = ({
             const tooltipTitle =
               status === 'failed'
                 ? row.original.error_message || 'Failed'
-                : status === 'sending'
-                  ? 'Sent it'
+                 : status === 'queued'
+                  ? 'In Queue'
+                : status === 'sending' || 'send'
+                  ? 'Sent'
                   : row.original.status || 'Unknown'
 
             return (
@@ -451,7 +466,7 @@ const CampaignViewLogDialog = ({
         }),
         columnHelper.accessor('scheduled_at', {
           header: 'Scheduled At',
-          // cell: ({ row }) => <Typography className='text-center'>{row.original.scheduled_at ?? '-'}</Typography>
+          // cell: ({ row }) => <Typography>{row.original.scheduled_at ?? '-'}</Typography>
           cell: ({ row }) => {
             const raw = row.original.scheduled_at
             const formatted = raw ? dayjs(raw).format('DD-MM-YYYY hh:mm A') : '-'
@@ -642,7 +657,7 @@ const CampaignViewLogDialog = ({
               onRowsPerPageChange={newSize => {
                 setPagination({ page: 0, perPage: newSize })
               }}
-              tableContainerClassName="max-h-[400px] overflow-y-auto" 
+              tableContainerClassName='max-h-[400px] overflow-y-auto'
             />
           </div>
         </DialogContent>

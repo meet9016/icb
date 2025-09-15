@@ -130,7 +130,7 @@ const AnnouncementListPage = ({ tableData }: { tableData?: UsersType[] }) => {
           }
 
           const text = htmlToText(row.original.title || '')
-          const truncated = text.length > 20 ? `${text.slice(0, 20)}...` : text
+          const truncated = text.length > 15 ? `${text.slice(0, 15)}...` : text
 
           return (
             <Tooltip title={text} arrow placement='bottom-start'>
@@ -140,25 +140,25 @@ const AnnouncementListPage = ({ tableData }: { tableData?: UsersType[] }) => {
         }
       }),
 
-      columnHelper.accessor('description', {
-        header: 'Description',
-        cell: ({ row }) => {
-          const htmlToText = (html: string): string => {
-            const temp = document.createElement('div')
-            temp.innerHTML = html
-            return temp.textContent || temp.innerText || ''
-          }
+      // columnHelper.accessor('description', {
+      //   header: 'Description',
+      //   cell: ({ row }) => {
+      //     const htmlToText = (html: string): string => {
+      //       const temp = document.createElement('div')
+      //       temp.innerHTML = html
+      //       return temp.textContent || temp.innerText || ''
+      //     }
 
-          const text = htmlToText(row.original.description || '')
-          const truncated = text.length > 25 ? `${text.slice(0, 25)}...` : text
+      //     const text = htmlToText(row.original.description || '')
+      //     const truncated = text.length > 15 ? `${text.slice(0, 15)}...` : text
 
-          return (
-            <Tooltip title={text} arrow placement='bottom-start'>
-              <Typography noWrap>{truncated}</Typography>
-            </Tooltip>
-          )
-        }
-      }),
+      //     return (
+      //       <Tooltip title={text} arrow placement='bottom-start'>
+      //         <Typography noWrap>{truncated}</Typography>
+      //       </Tooltip>
+      //     )
+      //   }
+      // }),
 
       columnHelper.accessor('status', {
         header: 'Status',

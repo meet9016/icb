@@ -276,10 +276,10 @@ const AddUserDrawer = ({ open, handleClose, editUserData, fetchUsers, selectedUs
             control={control}
             rules={{
               required: 'Phone is required',
-              pattern: {
-                value: /^\d{10}$/,
-                message: 'Phone number must be 10 digits'
-              }
+              // pattern: {
+              //   value: /^\d{10}$/,
+              //   message: 'Phone number must be 10 digits'
+              // }
             }}
             render={({ field }) => (
               <TextField

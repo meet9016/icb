@@ -319,20 +319,21 @@ const Connections = () => {
           <Grid size={{ xs: 12, md: 6 }}>
             <CardHeader title='Connect' subheader='Display content from your connected accounts on your site' />
             <CardContent className='flex flex-col gap-4'>
-              {connectedAccountsArr.map((item, index) => (
-                <div key={index} className='flex items-center justify-between gap-4'>
-                  <div className='flex flex-grow items-center gap-4'>
-                    <img height={32} width={32} src={item.logo} alt={item.title} />
-                    <div className='flex-grow'>
-                      <Typography className='font-medium' color='text.primary'>
-                        {item.title}
-                      </Typography>
-                      <Typography variant='body2'>{item.subtitle}</Typography>
+              {loginStore.super_admin &&
+                connectedAccountsArr.map((item, index) => (
+                  <div key={index} className='flex items-center justify-between gap-4'>
+                    <div className='flex flex-grow items-center gap-4'>
+                      <img height={32} width={32} src={item.logo} alt={item.title} />
+                      <div className='flex-grow'>
+                        <Typography className='font-medium' color='text.primary'>
+                          {item.title}
+                        </Typography>
+                        <Typography variant='body2'>{item.subtitle}</Typography>
+                      </div>
                     </div>
+                    <Switch checked={checked} onChange={handleChange} />
                   </div>
-                  <Switch checked={checked} onChange={handleChange} />
-                </div>
-              ))}
+                ))}
             </CardContent>
           </Grid>
         </Grid>

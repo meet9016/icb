@@ -46,9 +46,9 @@ import { email } from 'valibot'
 import LocalAudienceGrid from './LocalAudienceGrid'
 
 type Role = {
-  id: any;
-  name: string;
-};
+  id: any
+  name: string
+}
 const CreateCampaign = () => {
   const router = useRouter()
   const { lang: locale } = useParams()
@@ -61,13 +61,14 @@ const CreateCampaign = () => {
   const adminStore = useSelector((state: RootState) => state.admin)
 
   const [selectedChannel, setSelectedChannel] = useState<string[]>([])
+  const [showEditTimeChannel, setShowEditTimeChannel] = useState('')
   const [rolesList, setRolesList] = useState<RoleOption[]>([])
   const [selectedData, setSelectedData] = useState([])
   // const [selectedData, setSelectedData] = useState<any[]>([])
   const [startDateTime, setStartDateTime] = useState<Dayjs | null>(dayjs())
   //dataLack
   const [rolesListDataLack, setRolesListDataLack] = useState<RoleOption[]>([])
-  const [selectedLabelsDataLack, setSelectedLabelsDataLack] = useState<Role[]>([]);
+  const [selectedLabelsDataLack, setSelectedLabelsDataLack] = useState<Role[]>([])
 
   const [filterWishDataLack, setFilterWishDataLack] = useState<RoleOption[]>([])
   const [filterWishSelectedLabelsDataLack, setFilterWishSelectedLabelsDataLack] = useState([])
@@ -365,6 +366,7 @@ const CreateCampaign = () => {
         announcement_id: localStorage.getItem('announcementId'),
         campaign_id: ids,
         showOnlyRole: true,
+        channel: 'push_notification',
         tenant_id: adminStore.tenant_id,
         school_id: adminStore.school_id
       }
@@ -377,7 +379,6 @@ const CreateCampaign = () => {
         id: item,
         name: String(item).charAt(0).toUpperCase() + String(item).slice(1)
       }))
-      console.log('resFilter?.data?.data', resFilter?.data?.data)
 
       const toArray = (val: any): any[] => {
         if (Array.isArray(val)) return val
@@ -387,7 +388,7 @@ const CreateCampaign = () => {
       // const firstUsers = toArray(resFilter?.data?.data)
       setSelectedData(resFilter?.data?.data)
 
-      if (resFilter?.data?.status === 'success') {
+      if (resFilter?.data?.status === 'true') {
         setSelectedLabelsDataLack(selectedRoles)
 
         const allFilters: RoleOption[] = []
@@ -447,14 +448,12 @@ const CreateCampaign = () => {
 
         setFilterWishDataLack(allFilters)
         setFilterWishSelectedRole(resFilter?.data?.column_names)
-        console.log('11111111', resFilter.data.column_names)
 
         const formatted = resFilter?.data?.column_names?.split(',')?.map((val: any) => ({
           id: val,
           name: val
         }))
         setFilterWishSelectedLabelsDataLack(formatted)
-        console.log('1111110000', formatted)
       }
 
       const res = await api.get(`${endPointApi.getCampaignAnnounceWise}`, {
@@ -495,7 +494,6 @@ const CreateCampaign = () => {
 
         // If you need it for anything else later:
         // const formatted2 = toIdNameArray2(res?.data?.column_name);
-        console.log('res?.data?.users', res?.data?.users)
         if (Number(connection?.connectDataLack) === 0) {
           setSelectedData(res?.data?.users || [])
         }
@@ -507,6 +505,7 @@ const CreateCampaign = () => {
         setRecurringCount(res?.data?.frequency_count)
         setRecurringType(res?.data?.frequency_type)
         setSelectedChannel(res?.data?.channels)
+        setShowEditTimeChannel(res?.data?.channel_name)
         setStartDateTime(dayjs(combinedDateTime, 'YYYY-MM-DD HH:mm'))
         setAnnouncementTitle(res?.data?.announcement?.title)
       }
@@ -772,18 +771,16 @@ const CreateCampaign = () => {
       let time = ''
       let timeampm = ''
 
-      if (dayjs(startDateTime).isValid()) {
+      if (scheduleType === 'schedule') {
         const formatted = dayjs(startDateTime).format('YYYY-MM-DD HH:mm')
-        const [datePart, timePart, ampm] = formatted.split(' ')
+        const [datePart, timePart] = formatted.split(' ')
         date = datePart || ''
         time = timePart || ''
-        timeampm = ampm || ''
       } else {
-        const formatted = dayjs().format('YYYY-MM-DD HH:mm')
-        const [datePart, timePart, ampm] = formatted.split(' ')
+        const formatted = dayjs(startDateTime).format('YYYY-MM-DD HH:mm')
+        const [datePart, timePart] = formatted.split(' ')
         date = datePart || ''
         time = timePart || ''
-        timeampm = ampm || ''
       }
       const selectedFilter = filterWishSelectedLabelsDataLack.map((val: any) => val.id)
 
@@ -802,7 +799,7 @@ const CreateCampaign = () => {
         frequency_count: mode == 'one_time' ? 1 : recurringCount,
         campaign_date: scheduleType === 'schedule' ? date : dayjs().format('YYYY-MM-DD'),
         campaign_time: time,
-        campaign_ampm: 'am',
+        // campaign_ampm: 'am',
         // role_ids: '1',
         column_name: selectedFilter,
         filters: filters,
@@ -1208,7 +1205,7 @@ const CreateCampaign = () => {
                     This campaign will be sent immediately to the selected audience via{' '}
                     <b>
                       {ids
-                        ? selectedChannel
+                        ? showEditTimeChannel
                         : selectedChannel && selectedChannel.map(item => channelMap[item] || item).join(', ')}
                     </b>
                     .
@@ -1219,10 +1216,10 @@ const CreateCampaign = () => {
                     This campaign will be sent to the selected audience via{' '}
                     <b>
                       {ids
-                        ? selectedChannel
+                        ? showEditTimeChannel
                         : selectedChannel && selectedChannel.map(item => channelMap[item] || item).join(', ')}
                     </b>
-                    on{' '}
+                    {' '}on{' '}
                     <b>
                       {dayjs(startDateTime).isValid()
                         ? dayjs(startDateTime).format('DD-MM-YYYY hh:mm A')
@@ -1236,7 +1233,7 @@ const CreateCampaign = () => {
                     This campaign will be sent to the selected audience via{' '}
                     <b>
                       {ids
-                        ? selectedChannel
+                        ? showEditTimeChannel
                         : selectedChannel && selectedChannel.map(item => channelMap[item] || item).join(', ')}
                     </b>{' '}
                     starting from{' '}
@@ -1254,7 +1251,7 @@ const CreateCampaign = () => {
                     This campaign will be sent to the selected audience via{' '}
                     <b>
                       {ids
-                        ? selectedChannel
+                        ? showEditTimeChannel
                         : selectedChannel && selectedChannel.map(item => channelMap[item] || item).join(', ')}
                     </b>
                     , starting from{' '}
@@ -1271,29 +1268,6 @@ const CreateCampaign = () => {
                     .
                   </>
                 )}
-                {/* <b>
-                  {ids
-                    ? selectedChannel
-                    : selectedChannel && selectedChannel.map(item => channelMap[item] || item).join(', ')}
-                </b>{' '}
-                on{' '}
-                <b>
-                  {dayjs(startDateTime).isValid()
-                    ? dayjs(startDateTime).format('DD-MM-YYYY hh:mm A')
-                    : 'DD-MM-YYYY hh:mm A'}
-                </b>
-                . It will repeat{' '}
-                <b>
-                  {recurringCount} {recurringType}
-                  {recurringCount > 1 ? 's' : ''}
-                </b>{' '}
-                at the same time. */}
-                {/* {isRecurring && (
-                    <>
-                      {' '}
-                      This will repeat <b>{recurringCount}</b> at same time <b>{recurringType}</b>.
-                    </>
-                  )} */}
               </Typography>
 
               {mode === 'recurring' && (

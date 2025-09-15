@@ -17,6 +17,7 @@ export interface EndPointApi {
     getUserCount: string
     postMultipleStatusChange: string
     postMultipleRoleChange: string
+    getUserContactType: string
     
     //Role & Permission
     getAllRoles: string
@@ -79,6 +80,7 @@ const endPointApi: EndPointApi = {
     getUserCount: 'users/count',
     postMultipleStatusChange: 'users/status-toggle-multiple',
     postMultipleRoleChange: 'users/roles-toggle-multiple',
+    getUserContactType: 'user-contact-type',
 
     //Role & Permission
     getAllRoles:'roles-all-get',

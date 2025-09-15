@@ -28,6 +28,8 @@ import Loader from '@/components/Loader'
 
 import { useSelector } from 'react-redux'
 import { RootState } from '@/redux-store'
+import { api } from '@/utils/axiosInstance'
+import endPointApi from '@/utils/endPointApi'
 
 type DataType = {
   title: string
@@ -110,6 +112,12 @@ const recentActivities = [
   }
 ]
 
+interface CountCard {
+  title: string
+  value: number
+  color: 'primary' | 'info' | 'warning' | string
+  icon: ReactNode
+}
 const WelcomeCard = () => {
   const theme = useTheme()
   const belowMdScreen = useMediaQuery(theme.breakpoints.down('md'))
@@ -117,16 +125,7 @@ const WelcomeCard = () => {
   const [loading, setLoading] = useState(false)
   const adminStore = useSelector((state: RootState) => state.admin)
   const loginStore = useSelector((state: RootState) => state.login)
-
-  // useEffect(() => {
-  //   setLoading(true)
-  //   const timeout = setTimeout(() => {
-  //     setLoading(false)
-  //   }, 2000)
-
-  //   // Optional: Clear timeout on unmount
-  //   return () => clearTimeout(timeout)
-  // }, [])
+  const [totalCount, setTotalCount] = useState<CountCard[]>([])
 
   // Static chart colors
   // Chart colors with fallback
@@ -232,6 +231,55 @@ const WelcomeCard = () => {
     }
   }
 
+  const getUserCount = () => {
+    api.get(`${endPointApi.getUserCount}`).then(res => {
+      setTotalCount([
+        {
+          title: 'Total Students',
+          value: res.data.data.studentIdCount, // 👈 correct key from API
+          color: 'primary',
+          icon: <img src='/images/avatars/5.png' alt='icon' className='rounded-full w-[38px] h-[38px] object-cover' />
+        },
+        {
+          title: 'Total Teachers',
+          value: res.data.data.tchIdCount,
+          color: 'info',
+          icon: <img src='/images/avatars/8.png' alt='icon' className='rounded-full w-[38px] h-[38px] object-cover' />
+        },
+        {
+          title: 'Total Parent',
+          value: res.data.data.guardianIdCount,
+          color: 'info',
+          icon: <img src='/images/avatars/3.png' alt='icon' className='rounded-full w-[38px] h-[38px] object-cover' />
+        },
+        {
+          title: 'Total',
+          value: res.data.data.active_count,
+          color: 'warning',
+          icon: (
+            <svg xmlns='http://www.w3.org/2000/svg' width='38' height='38' viewBox='0 0 38 38' fill='none'>
+              <path
+                opacity='0.2'
+                d='M8.08984 29.9102C6.72422 28.5445 7.62969 25.6797 6.93203 24.0023C6.23438 22.325 3.5625 20.8555 3.5625 19C3.5625 17.1445 6.20469 15.7344 6.93203 13.9977C7.65938 12.2609 6.72422 9.45547 8.08984 8.08984C9.45547 6.72422 12.3203 7.62969 13.9977 6.93203C15.675 6.23438 17.1445 3.5625 19 3.5625C20.8555 3.5625 22.2656 6.20469 24.0023 6.93203C25.7391 7.65938 28.5445 6.72422 29.9102 8.08984C31.2758 9.45547 30.3703 12.3203 31.068 13.9977C31.7656 15.675 34.4375 17.1445 34.4375 19C34.4375 20.8555 31.7953 22.2656 31.068 24.0023C30.3406 25.7391 31.2758 28.5445 29.9102 29.9102C28.5445 31.2758 25.6797 30.3703 24.0023 31.068C22.325 31.7656 20.8555 34.4375 19 34.4375C17.1445 34.4375 15.7344 31.7953 13.9977 31.068C12.2609 30.3406 9.45547 31.2758 8.08984 29.9102Z'
+                fill='white'
+              />
+              <path
+                d='M25.5312 15.4375L16.818 23.75L12.4687 19.5937M8.08984 29.9102C6.72422 28.5445 7.62969 25.6797 6.93203 24.0023C6.23437 22.325 3.5625 20.8555 3.5625 19C3.5625 17.1445 6.20469 15.7344 6.93203 13.9977C7.65937 12.2609 6.72422 9.45547 8.08984 8.08984C9.45547 6.72422 12.3203 7.62969 13.9977 6.93203C15.675 6.23437 17.1445 3.5625 19 3.5625C20.8555 3.5625 22.2656 6.20469 24.0023 6.93203C25.7391 7.65937 28.5445 6.72422 29.9102 8.08984C31.2758 9.45547 30.3703 12.3203 31.068 13.9977C31.7656 15.675 34.4375 17.1445 34.4375 19C34.4375 20.8555 31.7953 22.2656 31.068 24.0023C30.3406 25.7391 31.2758 28.5445 29.9102 29.9102C28.5445 31.2758 25.6797 30.3703 24.0023 31.068C22.325 31.7656 20.8555 34.4375 19 34.4375C17.1445 34.4375 15.7344 31.7953 13.9977 31.068C12.2609 30.3406 9.45547 31.2758 8.08984 29.9102Z'
+                stroke='white'
+                strokeWidth='2'
+                strokeLinecap='round'
+                strokeLinejoin='round'
+              />
+            </svg>
+          )
+        }
+      ])
+    })
+  }
+
+  useEffect(() => {
+    getUserCount()
+  }, [])
   return (
     <>
       {/* {loading && <Loader />} */}
@@ -255,7 +303,7 @@ const WelcomeCard = () => {
         </Card>
         {/* <Card className='mb-6 p-6'> */}
         <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 py-6'>
-          {data.map((item, i) => (
+          {totalCount.map((item, i) => (
             <Card>
               <div
                 key={i}

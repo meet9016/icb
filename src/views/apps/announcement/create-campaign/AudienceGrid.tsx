@@ -23,7 +23,6 @@ import { ModuleRegistry } from 'ag-grid-community'
 import { RowApiModule } from 'ag-grid-community'
 import { Typography } from '@mui/material'
 import { useSettings } from '@/@core/hooks/useSettings'
-
 // Register required AG Grid modules
 ModuleRegistry.registerModules([
   QuickFilterModule,
@@ -184,7 +183,9 @@ const AudienceGrid = ({
     add2: 'Address 2',
     tch_code: 'Teacher Code',
     emp_code: 'Employee Code',
-    emp_status: 'Employee Status'
+    emp_status: 'Employee Status',
+    p_email: 'Personal Email',
+    p_mobile: 'Personal Mobile'
   }
 
   // const buildCols = (rows: any[]) => {
@@ -254,14 +255,17 @@ const AudienceGrid = ({
     setSelectRowId(merged)
   }
 
+  const [roleCount, setRoleCount] = useState<number>(0)
+
   // user_id get
   const onSelectionChangedFactory = (role: string) => (params: any) => {
     const nodes = params.api.getSelectedNodes()
     const ids = nodes.map((n: any) => n.data.id ?? n.data.user_id)
-    console.log('nodes', nodes)
+    console.log('nodes', ids)
     const roleCount = ids.length
 
     console.log(`${role} selected count:`, roleCount)
+    // setRoleCount()
     selectedIdsByRoleRef.current[role] = ids
 
     const merged = Object.values(selectedIdsByRoleRef.current).flat()
@@ -276,16 +280,22 @@ const AudienceGrid = ({
       __rid: `${role}__${idx}` // unique inside this grid regardless of user_id collisions
     }))
 
-  const allowedRoles =selectedLabelsDataLack && selectedLabelsDataLack.map(item => item.id);
+  const allowedRoles = selectedLabelsDataLack && selectedLabelsDataLack.map(item => item.id)
   return (
     <>
       {Object.entries(selectedData)
-       .filter(([role]) => allowedRoles.includes(role))
+        .filter(([role]) => allowedRoles.includes(role))
         .map(
           ([role, rows]) =>
             Array.isArray(rows) &&
             rows.length > 0 && (
               <div key={role} style={{ color: settings.primaryColor }} className='rounded-lg border shadow-sm'>
+                {/* <div className='px-4 py-3 border-b flex items-center justify-between'>
+                <h3 className='text-base font-semibold'>
+                  {toTitle(role === 'guardian' ? 'Parent' : (role as string))}
+                </h3>
+              </div> */}
+
                 <Typography
                   className='px-5 py-3'
                   variant='subtitle1'
@@ -299,7 +309,6 @@ const AudienceGrid = ({
                 >
                   {toTitle(role === 'guardian' ? 'Parent' : (role as string))}
                 </Typography>
-
                 <div className=''>
                   <div className='ag-theme-quartz' style={{ width: '100%', height: 420 }}>
                     <AgGridReact

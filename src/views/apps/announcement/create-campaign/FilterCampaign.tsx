@@ -99,6 +99,7 @@ const FilterCampaign = ({
   //     prev.includes(id) ? prev.filter((item: any) => item !== id) : [...prev, id]
   //   )
   // }
+  
   const { settings } = useSettings()
 
   const handleSelectCommonColumn = (id: string) => {
@@ -300,6 +301,7 @@ const FilterCampaign = ({
     return acc
   }, {})
 
+  
   /** Normalize helpers */
   const toKey = (s: any) =>
     String(s ?? '')
@@ -326,14 +328,14 @@ const FilterCampaign = ({
     Object.entries(groupedDataRoleWise).forEach(([roleKey, items]: [string, any[]]) => {
       if (!items || items.length === 0) return
 
-      const roleNorm = toKey(roleKey)
-      if (seededRolesRef.current.has(roleNorm)) return // already seeded this role
+      const roleName = toKey(roleKey)
+      if (seededRolesRef.current.has(roleName)) return // already seeded this role
 
-      const wanted = ids ? filterWishSelectedRole[roleNorm] : defaultRoleSelections[roleNorm]
+      const wanted = ids ? filterWishSelectedRole[roleName] : defaultRoleSelections[roleName]
 
       if (!wanted || wanted.length === 0) {
         // No defaults defined for this role: mark as seeded to avoid rechecking forever
-        seededRolesRef.current.add(roleNorm)
+        seededRolesRef.current.add(roleName)
         return
       }
 
@@ -355,7 +357,7 @@ const FilterCampaign = ({
       })
 
       // Mark this role as seeded regardless (prevents repeated seeding loops)
-      seededRolesRef.current.add(roleNorm)
+      seededRolesRef.current.add(roleName)
     })
   }, [groupedDataRoleWise, filterWishSelectedLabelsDataLack, filterWishSelectedRole]) // runs when roles/items/state change
 
@@ -569,7 +571,6 @@ const FilterCampaign = ({
                   <Grid container spacing={1}>
                     {(groupedData?.parent ?? []).map((field: any, index: number) => (
                       <Grid item xs={12} md={2} key={index}>
-                        {/* {console.log('field.filter_values', field.filter_values)} */}
 
                         {field.filter_values !== null ? (
                           <TextField

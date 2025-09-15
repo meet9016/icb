@@ -205,8 +205,10 @@ const UserListTable = ({ tableData }: { tableData?: UsersType[] }) => {
 
   const [addUserOpen, setAddUserOpen] = useState(false)
   const [rowSelection, setRowSelection] = useState({})
+  const [contactSelection, setContactSelection] = useState([])
   const [role, setRole] = useState<UsersType['role']>('')
   const [status, setStatus] = useState<UsersType['status']>('')
+  const [contactType, setContactType] = useState<string[]>([]) // Define as an array of strings
   const [data, setData] = useState<UsersType[]>([])
   const [editUserData, setEditUserData] = useState<UsersType | undefined>(undefined)
   const [searchData, setSearchData] = useState<string>('')
@@ -257,6 +259,28 @@ const UserListTable = ({ tableData }: { tableData?: UsersType[] }) => {
       }
     }
     fetchRoles()
+  }, [])
+
+  useEffect(() => {
+    // if (fetchedRef.current) return
+    // fetchedRef.current = true
+
+    const fetchContactType = async () => {
+      try {
+        setLoading(true)
+        const response = await api.get(`${endPointApi.getUserContactType}`)
+        const transformedData = response.data.filters[0].contact_type.map(({ contact_type, contact_desc }) => ({
+          value: Number(contact_type), // Convert contact_type to number
+          name: contact_desc
+        }))
+        setContactSelection(transformedData)
+      } catch (err) {
+        return null
+      } finally {
+        setLoading(false)
+      }
+    }
+    fetchContactType()
   }, [])
 
   const handleChange = (event: SelectChangeEvent<string[]>) => {
@@ -349,11 +373,15 @@ const UserListTable = ({ tableData }: { tableData?: UsersType[] }) => {
       }),
       columnHelper.accessor('email', {
         header: 'Email',
-        cell: ({ row }) => <Typography>{row.original.email}</Typography>
+        cell: ({ row }) => <Typography>{row.original.email ?? '-'}</Typography>
       }),
-      columnHelper.accessor('dl_contact_type', {
+      columnHelper.accessor('phone', {
+        header: 'Phone',
+        cell: ({ row }) => <Typography>{row.original.phone ?? '-'}</Typography>
+      }),
+      columnHelper.accessor('contact_type_name', {
         header: 'Contact Type',
-        cell: ({ row }) => <Typography>{row.original.dl_contact_type ?? '-'}</Typography>
+        cell: ({ row }) => <Typography>{row.original.contact_type_name ?? '-'}</Typography>
       }),
       columnHelper.accessor('role', {
         header: 'Role',
@@ -526,6 +554,9 @@ const UserListTable = ({ tableData }: { tableData?: UsersType[] }) => {
   const fetchUsers = async () => {
     try {
       setLoading(true)
+      console.log('23232')
+      const type = contactType.join(',')
+
       const response = await api.get(`${endPointApi.getUser}`, {
         params: {
           role_id: role,
@@ -533,7 +564,8 @@ const UserListTable = ({ tableData }: { tableData?: UsersType[] }) => {
           per_page: rowsPerPage.toString(),
           page: page + 1,
           status: status || '',
-          id: ''
+          id: '',
+          contact_type: type || ''
         }
       })
       if (response.data.message === 'Data not found for this User') {
@@ -551,6 +583,7 @@ const UserListTable = ({ tableData }: { tableData?: UsersType[] }) => {
           status: number
           image: string
           phone: string
+          contact_type_name: string
         }) => ({
           id: user.id,
           fullName: user.full_name ?? '',
@@ -560,6 +593,7 @@ const UserListTable = ({ tableData }: { tableData?: UsersType[] }) => {
           role: user.roles ?? [],
           status: user.status === 1 ? 'active' : 'inactive',
           phone: user.phone,
+          contact_type_name: user.contact_type_name,
           currentPlan: 'enterprise'
         })
       )
@@ -582,7 +616,7 @@ const UserListTable = ({ tableData }: { tableData?: UsersType[] }) => {
   useEffect(() => {
     fetchUsers()
     getUserCount()
-  }, [role, status, searchData, page, rowsPerPage])
+  }, [role, status, searchData, page, rowsPerPage, contactType])
 
   const getUserCount = () => {
     api.get(`${endPointApi.getUserCount}`).then(res => setTotalUser(res.data.data))
@@ -654,7 +688,8 @@ const UserListTable = ({ tableData }: { tableData?: UsersType[] }) => {
           sync: true,
           tenant_id: adminStore?.tenant_id?.toString(),
           school_id: adminStore?.school_id?.toString(),
-          return_records: 1
+          return_records: 1,
+          full_records : 'disabled'
         }
       })
 
@@ -864,7 +899,16 @@ const UserListTable = ({ tableData }: { tableData?: UsersType[] }) => {
 
       <Card>
         <CardHeader title='Filters' className='pbe-4' />
-        <TableFilters role={role} setRole={setRole} status={status} setStatus={setStatus} rolesList={rolesList} />
+        <TableFilters
+          role={role}
+          setRole={setRole}
+          status={status}
+          setStatus={setStatus}
+          contactSelection={contactSelection}
+          contactType={contactType}
+          setContactType={setContactType}
+          rolesList={rolesList}
+        />
         <Divider />
         <>
           <div className='p-5'>
