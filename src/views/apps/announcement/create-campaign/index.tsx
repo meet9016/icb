@@ -362,6 +362,7 @@ const CreateCampaign = () => {
   const fetchEditCampign = async () => {
     setloaderMain(true)
     try {
+      //Filter api Start
       const body = {
         announcement_id: localStorage.getItem('announcementId'),
         campaign_id: ids,
@@ -386,13 +387,15 @@ const CreateCampaign = () => {
         return []
       }
       // const firstUsers = toArray(resFilter?.data?.data)
+      
       setSelectedData(resFilter?.data?.data)
 
       if (resFilter?.data?.status === 'true') {
         setSelectedLabelsDataLack(selectedRoles)
+console.log("resFilter",resFilter?.data);
 
         const allFilters: RoleOption[] = []
-        const filtersCatalog = resFilter?.data?.filters_catalog
+        const filtersCatalog = resFilter?.data?.filters
 
         const initialStudentForm: Record<string, any> = {}
         const initialParentForm: Record<string, any> = {}
@@ -404,10 +407,11 @@ const CreateCampaign = () => {
           initialFormState: Record<string, any>
         ) => {
           if (!Array.isArray(roleFilters)) return
+      console.log("roleFilters",roleFilters);
 
           const processed: RoleOption[] = roleFilters.map((item: any) => {
-            if (item?.update_value === true && item?.newfilter_column !== null && item?.column_name) {
-              let value = item.newfilter_column
+            if (item?.update_value === true && item?.selected_filter_values !== null && item?.column_name) {
+              let value = item.selected_filter_values
 
               if (typeof value === 'string' && value.startsWith('"') && value.endsWith('"')) {
                 value = value.slice(1, -1)
@@ -429,6 +433,7 @@ const CreateCampaign = () => {
 
           allFilters.push(...processed)
         }
+console.log("filtersCatalog",filtersCatalog);
 
         // fill role filters
         processRoleFilters(filtersCatalog?.parent, 'parent', initialParentForm)
@@ -445,6 +450,7 @@ const CreateCampaign = () => {
         if (Object.keys(initialTeacherForm).length) {
           setTeacherForm((prev: any) => ({ ...prev, ...initialTeacherForm }))
         }
+console.log("*****",resFilter?.data?.column_names);
 
         setFilterWishDataLack(allFilters)
         setFilterWishSelectedRole(resFilter?.data?.column_names)
@@ -453,9 +459,13 @@ const CreateCampaign = () => {
           id: val,
           name: val
         }))
+        console.log("formatted",formatted);
+        
         setFilterWishSelectedLabelsDataLack(formatted)
       }
+      //Filter api End
 
+      //Schedule Api
       const res = await api.get(`${endPointApi.getCampaignAnnounceWise}`, {
         params: {
           announcement_id: localStorage.getItem('announcementId'),

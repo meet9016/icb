@@ -261,10 +261,10 @@ const AudienceGrid = ({
   const onSelectionChangedFactory = (role: string) => (params: any) => {
     const nodes = params.api.getSelectedNodes()
     const ids = nodes.map((n: any) => n.data.id ?? n.data.user_id)
-    console.log('nodes', ids)
+    // console.log('nodes', ids)
     const roleCount = ids.length
 
-    console.log(`${role} selected count:`, roleCount)
+    // console.log(`${role} selected count:`, roleCount)
     // setRoleCount()
     selectedIdsByRoleRef.current[role] = ids
 
